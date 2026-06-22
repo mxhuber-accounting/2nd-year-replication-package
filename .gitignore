@@ -1,0 +1,39 @@
+# ===================================================================
+# Replication package — only Stata do-files and the README are tracked.
+# Everything below is excluded so proprietary data and local artifacts
+# can never be pushed to GitHub.
+# ===================================================================
+
+# --- Proprietary / large data (NEVER upload) ---
+*.dta
+*.csv
+*.txt
+*.dat
+*.xls
+*.xlsx
+*.parquet
+*.zip
+*.7z
+*.gz
+
+# --- Stata swap / backup / log files ---
+*.stswp
+~*.do.stswp
+~$*
+*.log
+*.smcl
+
+# --- Stata graph / output artifacts ---
+*.gph
+*.eps
+*.pdf
+*.png
+*.tex
+Figures and Tables/
+
+# --- macOS / Dropbox cruft ---
+.DS_Store
+Icon?
+.dropbox
+.dropbox.attr
+._*
