@@ -329,25 +329,25 @@ save "${outdir}/PERSONNEL_Complete.dta", replace
 
 use "${outdir}/FUND_Complete.dta", clear
 
-// Drop Duplicates Following Goyal et al. (2024
+// Drop Duplicates Following Goyal et al. (2024)
 sort fundid qdate 
 bysort fundid qdate (qreport): keep if _n == 1
 
 save "${outdir}/FUND_Complete.dta", replace
 
 
-// For all of the following variables, merging them with holding data is only possible using qdate and NOT qreport, this may result in some inconsistencies to be paid attention to, as the primary inidicator can NOT be the more exact qreport anymore 
-
 *       2) Clean And Prepare FIRM Variables              
 **********************************************************************
 
 use "${outdir}/FIRM_Complete.dta", clear
 duplicates drop firmid qdate, force
+save "${outdir}/FIRM_Complete.dta", replace
 
 *       3) Clean And Prepare SECMAST Variables              
 **********************************************************************
 use "${outdir}/SECMAST_Complete.dta", clear
 duplicates drop issuecus qdate, force
+save "${outdir}/SECMAST_Complete.dta", replace
 
 
 *       3) Clean And Prepare SECMAST Variables              

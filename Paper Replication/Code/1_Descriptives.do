@@ -1,13 +1,30 @@
 ********************************************************************
-*** 1_Descriptive_Statistics
+*** 1_Descriptives.do
+***
+*** Input:  ${data}/eMAXXMergentFISD_SampleFinalCDS.dta     (raw, row 1)
+***         ${data}/eMAXXMergentFISD_SampleFinalCDS_WV.dta  (working file)
+*** Output: ${out}/Figure[1-5]_*.png
+***         ${out}/Table[1,3,4,5]_*.docx
+***         ${data}/_event_sample_main.dta                  (intermediate)
+***
+*** Main outcome: delta_holdings (bp of offering, winsorized 1/99 by fundtype).
+*** delta_holdings, pos_delta_holdings, neg_delta_holdings are built and
+*** winsorized in 0_0_Sample_Creation.do and flow through unchanged here.
 ********************************************************************
 
+clear all
+set more off
+set varabbrev off
+set linesize 200
+version 17
+
 * ============= SET PATHS =============
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data"
-global out  "${root}/Figures and Tables"
+global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+global data "${root}/Data/Working Files"
+global out  "${root}/Paper Replication/Figures and Tables/Descriptive"
 * =====================================
+cap mkdir "${root}/Paper Replication/Figures and Tables"
 cap mkdir "${out}"
-cap mkdir "${out}/Descriptive"
 
 
 *-------------------------------------------------------------*
@@ -40,7 +57,7 @@ end
 * Step 1: Full eMAXX Sample (raw file)                        *
 *-------------------------------------------------------------*
 
-use "${root}/eMAXXMergentFISD_SampleFinalCDS.dta", clear
+use "${data}/eMAXXMergentFISD_SampleFinalCDS.dta", clear
 
 qui count
 local n = r(N)
@@ -58,11 +75,44 @@ di as txt "[Full eMAXX raw]  bonds=`nb'  bond-qtrs=`nbq'  obs=`n'  funds=`nf'  f
 
 *-------------------------------------------------------------*
 * Load prepared _WV file                                      *
-* Holdings-exceedance errors were dropped in 0_0_Sample_      *
-* Creation so the check below is intentionally omitted.       *
 *-------------------------------------------------------------*
 
-use "${root}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
+use "${data}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
+
+* -------------------------------------------------------------*
+* Andreani-style holdings variables (built on the full bond-   *
+* fund-firm-quarter panel so the lag structure matches the     *
+* sample-creation construction of delta_holdings).             *
+* Paramt, amount_outstanding, and offering_amt are assumed in  *
+* thousands of dollars.                                        *
+* -------------------------------------------------------------*
+
+sort issueID fundid firmid qdate
+bysort issueID fundid firmid (qdate): gen _L_paramt = paramt[_n-1]
+
+gen delta_d = paramt - _L_paramt
+label variable delta_d "Delta Holding Q ('000 $)"
+
+gen delta_ratio = (paramt - _L_paramt) / _L_paramt if _L_paramt > 0 & !missing(_L_paramt)
+label variable delta_ratio "Delta Holding Ratio Q"
+
+gen holding_Q_mln  = paramt    / 1000
+gen holding_Q1_mln = _L_paramt / 1000
+gen holding_Q_ln   = ln(paramt)     if paramt    > 0
+gen holding_Q1_ln  = ln(_L_paramt)  if _L_paramt > 0 & !missing(_L_paramt)
+label variable holding_Q_mln  "Holding Q (mln $)"
+label variable holding_Q1_mln "Holding Q-1 (mln $)"
+label variable holding_Q_ln   "Holding Q Ln"
+label variable holding_Q1_ln  "Holding Q-1 Ln"
+
+gen issuance_bln    = offering_amt / 1e6
+gen issuance_ln     = ln(offering_amt)        if offering_amt > 0
+gen amount_held_bln = amount_outstanding / 1e6
+label variable issuance_bln    "Issuance Paramt (bln $)"
+label variable issuance_ln     "Issuance Paramt Ln"
+label variable amount_held_bln "Amount Held (bln $)"
+
+drop _L_paramt
 
 * PassiveInvestor classification
 capture drop PassiveInvestor
@@ -77,12 +127,11 @@ label define PassiveInvestor_lb 0 "Other" 1 "Passive MF" 2 "Life Insurer" ///
 label values PassiveInvestor PassiveInvestor_lb
 label variable PassiveInvestor "Investor Type"
 
+* Share variable used for Figures 1-2 coverage decompositions
 capture drop share
 gen share = (paramt / offering_amt) * 100
 label variable share "Holding share (% of offering amount)"
-bysort issueID fundid firmid (qdate): gen delta_holdings = ///
-    (paramt - paramt[_n-1]) / offering_amt * 10000
-label variable delta_holdings "Change in holdings (bp of offering amount, non-winsorized)"
+
 capture drop issue_totparamt
 bysort issueID qdate: egen issue_totparamt = total(paramt)
 
@@ -125,7 +174,7 @@ preserve
         xscale(range(`=tq(2012q1)' `=tq(2023q4)')) ///
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
-    graph export "${out}/Descriptive/Figure1_WithineMAXX.png", replace width(2400)
+    graph export "${out}/Figure1_WithineMAXX.png", replace width(2400)
 restore
 }
 
@@ -172,7 +221,7 @@ preserve
         xscale(range(`=tq(2012q1)' `=tq(2023q4)')) ///
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
-    graph export "${out}/Descriptive/Figure2_AmtOutstanding.png", replace width(2400)
+    graph export "${out}/Figure2_AmtOutstanding.png", replace width(2400)
 restore
 }
 
@@ -193,28 +242,28 @@ _logstep "  Clean Window (>2q post-issuance)"
 
 
 *=============================================================*
-* FIGURE 3: Mean Net Change by quarter and investor type      *
+* FIGURE 3: Mean Delta Holdings by quarter and investor type  *
 *=============================================================*
 
 {
 preserve
-    collapse (mean) mean_net = net_change_bp, by(qdate PassiveInvestor)
+    collapse (mean) mean_d = delta_holdings, by(qdate PassiveInvestor)
     keep if inrange(qdate, tq(2012q1), tq(2023q4))
     twoway ///
-        (line mean_net qdate if PassiveInvestor == 1, ///
+        (line mean_d qdate if PassiveInvestor == 1, ///
             lcolor("139 0 0") lwidth(medthick) lpattern(solid)) ///
-        (line mean_net qdate if PassiveInvestor == 2, ///
+        (line mean_d qdate if PassiveInvestor == 2, ///
             lcolor(black) lwidth(medthick) lpattern(solid)) ///
-        (line mean_net qdate if PassiveInvestor == 3, ///
+        (line mean_d qdate if PassiveInvestor == 3, ///
             lcolor(gs6) lwidth(medium) lpattern(dash)) ///
-        (line mean_net qdate if PassiveInvestor == 4, ///
+        (line mean_d qdate if PassiveInvestor == 4, ///
             lcolor(gs8) lwidth(medium) lpattern(longdash)) ///
-        (line mean_net qdate if PassiveInvestor == 5, ///
+        (line mean_d qdate if PassiveInvestor == 5, ///
             lcolor(gs10) lwidth(medium) lpattern(dash_dot)), ///
         legend(order(1 "Passive MF" 2 "Life Insurer" 3 "Other Insurer" ///
                      4 "P&C Insurer" 5 "Variable Annuity") ///
                rows(1) size(small) region(lcolor(white)) position(6)) ///
-        ytitle("Mean Net Change (bp of Amount Outstanding)", size(small)) ///
+        ytitle("Mean Delta Holdings (bp of offering amount)", size(small)) ///
         xtitle("") yline(0, lcolor(gs8) lpattern(dash)) ///
         ylabel(, labsize(small) nogrid angle(horizontal)) ///
         xlabel(`=tq(2012q1)' `=tq(2014q1)' `=tq(2016q1)' `=tq(2018q1)' ///
@@ -223,7 +272,7 @@ preserve
         xscale(range(`=tq(2012q1)' `=tq(2023q4)')) ///
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
-    graph export "${out}/Descriptive/Figure3_NetChange.png", replace width(2400)
+    graph export "${out}/Figure3_DeltaHoldings.png", replace width(2400)
 restore
 }
 
@@ -249,23 +298,26 @@ _logstep "Downgraded Bonds (ever)"
 *-------------------------------------------------------------*
 
 keep if inrange(rel_time, -8, 8)
-_logstep "Event Window [-8, +8] (Main Sample)"
+_logstep "Event Window [-8, +8] (Extensive Margin Sample)"
 
-save "${root}/_event_sample_main.dta", replace
+save "${data}/_event_sample_ext.dta", replace
+
+drop if missing(delta_holdings)
+_logstep "  Non-Missing Delta Holdings (Main Sample)"
+
+save "${data}/_event_sample_main.dta", replace
 
 
 *-------------------------------------------------------------*
 * Panel B subsamples                                          *
 *-------------------------------------------------------------*
 
-* (a) Balanced: bond observed in all 17 rel_time quarters
 preserve
     bysort issueID: egen n_reltime = nvals(rel_time)
     keep if n_reltime == 17
     _logstep "  Balanced (17 quarters)"
 restore
 
-* (b) CDS coverage
 preserve
     keep if !missing(CDS_spread)
     _logstep "  CDS Coverage"
@@ -289,16 +341,7 @@ forvalues i = 1/`nsteps' {
 }
 frame change default
 
-* Frame row order:
-*   1 = Full eMAXX Sample
-*   2 = Constrained Investors
-*   3 = Clean Window (>2q post-issuance)
-*   4 = Downgraded Bonds (ever)
-*   5 = Event Window [-8, +8] (Main Sample)
-*   6 = Balanced (17 quarters)
-*   7 = CDS Coverage
-
-local nrows = 10
+local nrows = 11
 local ncols = 6
 
 putdocx clear
@@ -336,7 +379,7 @@ putdocx table tbl(2,1) = ("Panel A: Sequential Restrictions"), italic halign(lef
 putdocx table tbl(2,1), colspan(6)
 
 local row = 3
-forvalues i = 1/5 {
+forvalues i = 1/6 {
     putdocx table tbl(`row',1) = ("`lbl_`i''"),  halign(left)
     putdocx table tbl(`row',2) = ("`b_`i''"),    halign(right)
     putdocx table tbl(`row',3) = ("`bq_`i''"),   halign(right)
@@ -346,11 +389,11 @@ forvalues i = 1/5 {
     local ++row
 }
 
-putdocx table tbl(8,1) = ("Panel B: Subsamples (of Main Sample)"), italic halign(left)
-putdocx table tbl(8,1), colspan(6)
+putdocx table tbl(9,1) = ("Panel B: Subsamples (of Main Sample)"), italic halign(left)
+putdocx table tbl(9,1), colspan(6)
 
-local row = 9
-forvalues i = 6/7 {
+local row = 10
+forvalues i = 7/8 {
     putdocx table tbl(`row',1) = ("`lbl_`i''"),  halign(left)
     putdocx table tbl(`row',2) = ("`b_`i''"),    halign(right)
     putdocx table tbl(`row',3) = ("`bq_`i''"),   halign(right)
@@ -360,22 +403,22 @@ forvalues i = 6/7 {
     local ++row
 }
 
-putdocx table tbl(10,.), border(bottom, single)
+putdocx table tbl(11,.), border(bottom, single)
 
-putdocx save "${out}/Descriptive/Table1_SampleSelection.docx", replace
+putdocx save "${out}/Table1_SampleSelection.docx", replace
 
 
 *=============================================================*
-* TABLE 3: Mean Net Change by Event Time x Investor Type      *
+* TABLE 3: Mean Delta Holdings by Event Time x Investor Type  *
 *=============================================================*
 
-use "${root}/_event_sample_main.dta", clear
+use "${data}/_event_sample_main.dta", clear
 
 preserve
     keep if inlist(PassiveInvestor, 1, 2, 3, 4, 5)
-    collapse (mean) m_net = net_change_bp (count) n = net_change_bp, ///
+    collapse (mean) m_d = delta_holdings (count) n = delta_holdings, ///
         by(rel_time PassiveInvestor)
-    reshape wide m_net n, i(rel_time) j(PassiveInvestor)
+    reshape wide m_d n, i(rel_time) j(PassiveInvestor)
     tempfile t3
     save `t3', replace
 restore
@@ -387,7 +430,7 @@ preserve
     forvalues i = 1/`nrt' {
         local rt_`i' = rel_time[`i']
         foreach k of numlist 1/5 {
-            local m`k'_`i' = string(m_net`k'[`i'], "%9.2f")
+            local m`k'_`i' = string(m_d`k'[`i'], "%9.2f")
         }
     }
 
@@ -405,17 +448,16 @@ preserve
     putdocx paragraph, halign(center)
     putdocx text ("TABLE 3."), bold
     putdocx paragraph, halign(center)
-    putdocx text ("Mean Net Change Around Rating Downgrades by Investor Type."), bold
+    putdocx text ("Mean Change in Holdings Around Rating Downgrades by Investor Type."), bold
     putdocx paragraph, halign(both)
-    putdocx text ("This table reports the cross-sectional mean of net change in bond holdings ")
-    putdocx text ("(in basis points of offering amount) by event time and investor type within the ")
-    putdocx text ("main event-window sample. The event clock is centered on the first downgrade by ")
-    putdocx text ("any rating agency (S&P, Moody's, or Fitch), with rel_time = 0 denoting the ")
-    putdocx text ("quarter of the first downgrade. The sample comprises bond-fund-firm-quarter ")
-    putdocx text ("observations of constrained investors (Life Insurers, Other Insurers, P&C ")
-    putdocx text ("Insurers, Passive Mutual Funds, and Variable Annuities) for bonds ever ")
-    putdocx text ("downgraded, restricted to relative time in [-8,+8]. Net change is pre-winsorized ")
-    putdocx text ("at the 1st and 99th percentiles within fundtype. The bottom row reports the total ")
+    putdocx text ("This table reports the cross-sectional mean of the change in bond holdings ")
+    putdocx text ("(in basis points of offering amount, winsorized at the 1st and 99th percentiles within ")
+    putdocx text ("fundtype) by event time and investor type within the main event-window sample. The event ")
+    putdocx text ("clock is centered on the first downgrade by any rating agency (S&P, Moody's, or Fitch), ")
+    putdocx text ("with rel_time = 0 denoting the quarter of the first downgrade. The sample comprises ")
+    putdocx text ("bond-fund-firm-quarter observations of constrained investors (Life Insurers, Other ")
+    putdocx text ("Insurers, P&C Insurers, Passive Mutual Funds, and Variable Annuities) for bonds ever ")
+    putdocx text ("downgraded, restricted to relative time in [-8,+8]. The bottom row reports the total ")
     putdocx text ("number of bond-fund-firm-quarter observations underlying the means in each column.")
 
     putdocx table tbl = (`nrows', `ncols'), border(all, nil)
@@ -449,35 +491,35 @@ preserve
     putdocx table tbl(`row',.), border(top, single)
     putdocx table tbl(`row',.), border(bottom, single)
 
-    putdocx save "${out}/Descriptive/Table3_MeanNetChange_RelTime.docx", replace
+    putdocx save "${out}/Table3_MeanDeltaHoldings_RelTime.docx", replace
 restore
 
 
 *=============================================================*
-* FIGURE 4: Mean Net Change by Event Time and Investor Type   *
+* FIGURE 4: Mean Delta Holdings by Event Time and Investor    *
 *=============================================================*
 
-use "${root}/_event_sample_main.dta", clear
+use "${data}/_event_sample_main.dta", clear
 
 {
 preserve
     keep if inlist(PassiveInvestor, 1, 2, 3, 4, 5)
-    collapse (mean) mean_net = net_change_bp, by(rel_time PassiveInvestor)
+    collapse (mean) mean_d = delta_holdings, by(rel_time PassiveInvestor)
     twoway ///
-        (line mean_net rel_time if PassiveInvestor == 1, ///
+        (line mean_d rel_time if PassiveInvestor == 1, ///
             lcolor("139 0 0") lwidth(medthick) lpattern(solid)) ///
-        (line mean_net rel_time if PassiveInvestor == 2, ///
+        (line mean_d rel_time if PassiveInvestor == 2, ///
             lcolor(black) lwidth(medthick) lpattern(solid)) ///
-        (line mean_net rel_time if PassiveInvestor == 3, ///
+        (line mean_d rel_time if PassiveInvestor == 3, ///
             lcolor(gs6) lwidth(medium) lpattern(dash)) ///
-        (line mean_net rel_time if PassiveInvestor == 4, ///
+        (line mean_d rel_time if PassiveInvestor == 4, ///
             lcolor(gs8) lwidth(medium) lpattern(longdash)) ///
-        (line mean_net rel_time if PassiveInvestor == 5, ///
+        (line mean_d rel_time if PassiveInvestor == 5, ///
             lcolor(gs10) lwidth(medium) lpattern(dash_dot)), ///
         legend(order(1 "Passive MF" 2 "Life Insurer" 3 "Other Insurer" ///
                      4 "P&C Insurer" 5 "Variable Annuity") ///
                rows(1) size(small) region(lcolor(white)) position(6)) ///
-        ytitle("Mean Net Change (bp of Amount Outstanding)", size(small)) ///
+        ytitle("Mean Delta Holdings (bp of offering amount)", size(small)) ///
         xtitle("Event Time (Quarters Relative to First Downgrade)", size(small)) ///
         yline(0, lcolor(gs8) lpattern(dash)) ///
         xline(0, lcolor(gs8) lpattern(dash)) ///
@@ -486,16 +528,64 @@ preserve
         xscale(range(-8 8)) ///
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
-    graph export "${out}/Descriptive/Figure4_NetChange_RelTime.png", replace width(2400)
+    graph export "${out}/Figure4_DeltaHoldings_RelTime.png", replace width(2400)
 restore
 }
 
+use "${data}/_event_sample_main.dta", clear
+{
+preserve
+    keep if inlist(PassiveInvestor, 1, 2, 3, 4, 5)
+
+    * Map event quarters to event years
+    *   rel_year = -2 -> Pre_2Y  (rel_time -8 to -5)
+    *   rel_year = -1 -> Pre_1Y  (rel_time -4 to -1)
+    *   rel_year =  0 -> Downgrade (rel_time 0)
+    *   rel_year =  1 -> Post_1Y (rel_time 1 to 4)
+    *   rel_year =  2 -> Post_2Y (rel_time 5 to 8)
+    gen rel_year = .
+    replace rel_year = -2 if inrange(rel_time, -8, -5)
+    replace rel_year = -1 if inrange(rel_time, -4, -1)
+    replace rel_year =  0 if rel_time == 0
+    replace rel_year =  1 if inrange(rel_time,  1,  4)
+    replace rel_year =  2 if inrange(rel_time,  5,  8)
+
+    collapse (mean) mean_d = delta_holdings, by(rel_year PassiveInvestor)
+
+    twoway ///
+        (connected mean_d rel_year if PassiveInvestor == 1, ///
+            lcolor("139 0 0") mcolor("139 0 0") lwidth(medthick) lpattern(solid) msymbol(O) msize(small)) ///
+        (connected mean_d rel_year if PassiveInvestor == 2, ///
+            lcolor(black) mcolor(black) lwidth(medthick) lpattern(solid) msymbol(O) msize(small)) ///
+        (connected mean_d rel_year if PassiveInvestor == 3, ///
+            lcolor(gs6) mcolor(gs6) lwidth(medium) lpattern(dash) msymbol(T) msize(small)) ///
+        (connected mean_d rel_year if PassiveInvestor == 4, ///
+            lcolor(gs8) mcolor(gs8) lwidth(medium) lpattern(longdash) msymbol(D) msize(small)) ///
+        (connected mean_d rel_year if PassiveInvestor == 5, ///
+            lcolor(gs10) mcolor(gs10) lwidth(medium) lpattern(dash_dot) msymbol(S) msize(small)), ///
+        legend(order(1 "Passive MF" 2 "Life Insurer" 3 "Other Insurer" ///
+                     4 "P&C Insurer" 5 "Variable Annuity") ///
+               rows(1) size(small) region(lcolor(white)) position(6)) ///
+        ytitle("Mean Delta Holdings (bp of offering amount)", size(small)) ///
+        xtitle("Event Window (Years Relative to First Downgrade)", size(small)) ///
+        yline(0, lcolor(gs8) lpattern(dash)) ///
+        xline(0, lcolor(gs8) lpattern(dash)) ///
+        ylabel(, labsize(small) nogrid angle(horizontal)) ///
+        xlabel(-2 "Pre_2Y" -1 "Pre_1Y" 0 "Downgrade" 1 "Post_1Y" 2 "Post_2Y", ///
+               labsize(small) nogrid) ///
+        xscale(range(-2 2)) ///
+        graphregion(color(white)) bgcolor(white) ///
+        plotregion(margin(medsmall) lcolor(gs10))
+
+    graph export "${out}/Figure4_DeltaHoldings_RelYear.png", replace width(2400)
+restore
+}
 
 *=============================================================*
 * FIGURE 5: First Downgrades and Sample Size by Calendar Qtr  *
 *=============================================================*
 
-use "${root}/_event_sample_main.dta", clear
+use "${data}/_event_sample_main.dta", clear
 
 {
 preserve
@@ -524,7 +614,7 @@ preserve
         xscale(range(`=tq(2012q1)' `=tq(2023q4)')) ///
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
-    graph export "${out}/Descriptive/Figure5_DowngradesSampleSize.png", replace width(2400)
+    graph export "${out}/Figure5_DowngradesSampleSize.png", replace width(2400)
 restore
 }
 
@@ -533,25 +623,40 @@ restore
 * TABLE 4: Descriptive Statistics (Event Sample)              *
 *=============================================================*
 
-use "${root}/_event_sample_main.dta", clear
+use "${data}/_event_sample_ext.dta", clear
 
-capture drop offering_amt_bln
+* ---- Bond-quarter variables for the table ----
 gen offering_amt_bln = offering_amt / 1e6
+gen amount_out_bln   = amount_outstanding / 1e6
+label variable offering_amt_bln "Offering Amount (bln $)"
+label variable amount_out_bln   "Amount Outstanding (bln $)"
 
-capture confirm variable yield
-if _rc {
-    di as err "Variable 'yield' not found -- rename in the variable list below if needed."
-}
-capture confirm variable agency_count
-if _rc {
-    di as err "Variable 'agency_count' not found -- rename in the variable list below if needed."
-}
+* Constrained institutional holdings as share of amount outstanding
+* (sum paramt across all bond-fund-firm rows of each bond-quarter, divide by AO, x100)
+bysort issueID qdate: egen _sum_paramt = total(paramt)
+gen constr_inst_share = (_sum_paramt / amount_outstanding) * 100
+label variable constr_inst_share "Constrained Institutional Holdings (% of AO)"
+drop _sum_paramt
 
-local depvars   "net_change_bp gross_buys_bp gross_sells_bp delta_holdings share"
-local deplabs   `" "Net Change (bp)" "Gross Buys (bp)" "Gross Sells (bp)" "Delta Holdings (bp, non-winsorized)" "Holding Share (% of offering)" "'
+* Composite NAIC rating (median-of-3 / lower-of-2 / sole-of-1)
+cap drop NAIC_num
+egen _agcount  = rownonmiss(SPR_num MR_num FR_num)
+egen _agmed3   = rowmedian(SPR_num MR_num FR_num)
+egen _agmax    = rowmax(SPR_num MR_num FR_num)
+gen NAIC_num = .
+replace NAIC_num = _agmed3 if _agcount == 3
+replace NAIC_num = _agmax  if inlist(_agcount, 1, 2)
+label variable NAIC_num "Composite NAIC Rating"
+drop _agcount _agmed3 _agmax
 
-local bondvars  "ttm offering_amt_bln yield agency_count"
-local bondlabs  `" "Time to Maturity (years)" "Offering Amount (bln $)" "Yield (%)" "Rating Agencies (count)" "'
+* ---- Variable groups ----
+* Dependent variables (delta_holdings/pos/neg are missing where lag is missing;
+*  N for those is smaller than for the extensive-only outcomes).
+local depvars  "delta_holdings pos_delta_holdings neg_delta_holdings net_change_bp gross_buys_bp gross_sells_bp entry exit"
+local deplabs  `" "Delta Holdings (Turnover Ratio Q, bp)" "Positive Delta (bp)" "Negative Delta (bp, abs)" "Net Change (bp)" "Gross Buys (bp)" "Gross Sells (bp)" "Entry" "Exit" "'
+
+local bondvars "offering_amt_bln ttm amount_out_bln constr_inst_share NAIC_num agency_count"
+local bondlabs `" "Offering Amount (bln $)" "Time to Maturity (years)" "Amount Outstanding (bln $)" "Constrained Institutional Holdings (% of AO)" "Composite NAIC Rating" "Rating Agencies (count)" "'
 
 local ndep  : word count `depvars'
 local nbond : word count `bondvars'
@@ -577,19 +682,7 @@ putdocx text ("TABLE 4."), bold
 putdocx paragraph, halign(center)
 putdocx text ("Descriptive Statistics."), bold
 putdocx paragraph, halign(both)
-putdocx text ("This table reports descriptive statistics for the variables used in this research within the ")
-putdocx text ("main event-window sample. The sample comprises bond-fund-firm-quarter observations of constrained ")
-putdocx text ("investors (Life Insurers, Other Insurers, P&C Insurers, Passive Mutual Funds, and Variable ")
-putdocx text ("Annuities) for bonds ever downgraded by S&P, Moody's, or Fitch, restricted to relative time in ")
-putdocx text ("[-8,+8] quarters around the first downgrade and to bond-quarters at least three quarters after ")
-putdocx text ("issuance (Clean Window). Net Change, Gross Buys, and Gross Sells are pre-winsorized at the 1st ")
-putdocx text ("and 99th percentiles within fundtype and expressed in basis points of the offering amount. ")
-putdocx text ("Delta Holdings is the non-winsorized counterpart, computed as the quarter-on-quarter change in ")
-putdocx text ("position scaled by offering amount and expressed in basis points. Holding Share is the ")
-putdocx text ("quarter-end position scaled by the offering amount, expressed in percent. Time to Maturity is ")
-putdocx text ("measured in years. Offering Amount is expressed in billions of dollars. Yield is in percent. ")
-putdocx text ("Rating Agencies is the count of rating agencies (S&P, Moody's, Fitch) with a non-missing rating ")
-putdocx text ("for the bond-quarter.")
+putdocx text ("This table reports descriptive statistics for the variables used in this research within the extensive-margin event-window sample. The sample comprises bond-fund-firm-quarter observations of constrained investors (Life Insurers, Other Insurers, P&C Insurers, Passive Mutual Funds, and Variable Annuities) for bonds ever downgraded by S&P, Moody's, or Fitch, restricted to relative time in [-8,+8] quarters around the first downgrade and to bond-quarters at least three quarters after issuance (Clean Window). Delta Holdings (Turnover Ratio Q) is the quarter-on-quarter change in paramt scaled by offering amount and expressed in basis points, winsorized at the 1st and 99th percentiles within fundtype. Positive Delta and Negative Delta decompose Delta Holdings into positive and absolute negative components, also winsorized within fundtype. Delta Holdings, Positive Delta, and Negative Delta are missing for the first observed quarter of each bond-fund-firm panel; the observation count is therefore smaller than for the remaining outcomes. Net Change, Gross Buys, and Gross Sells are the eMAXX-reconciled trading flows in basis points of amount outstanding, pre-winsorized within fundtype. Entry equals one in the first quarter a fund-firm holds the bond. Exit equals one in the last quarter a fund-firm holds the bond (set to zero in 2023q4 to avoid right-censoring). Constrained Institutional Holdings is the sum of paramt across all constrained-investor fund-firm rows for the bond-quarter, expressed as a percent of amount outstanding. The composite NAIC rating is the median of S&P, Moody's, and Fitch when all three are available, the lower (higher NAIC number) when two are available, and the sole rating when one is available. Rating Agencies is the count of agencies with a non-missing rating in the bond-quarter.")
 
 putdocx table tbl = (`nrows', `ncols'), border(all, nil)
 
@@ -620,7 +713,7 @@ forvalues k = 1/`ndep' {
     local ++row
 }
 
-putdocx table tbl(`row',1) = ("Bond characteristics"), italic halign(left)
+putdocx table tbl(`row',1) = ("Bond variables"), italic halign(left)
 putdocx table tbl(`row',1), colspan(7)
 local ++row
 
@@ -640,14 +733,14 @@ forvalues k = 1/`nbond' {
 local lastrow = `row' - 1
 putdocx table tbl(`lastrow',.), border(bottom, single)
 
-putdocx save "${out}/Descriptive/Table4_DescriptiveStatistics.docx", replace
+putdocx save "${out}/Table4_DescriptiveStatistics.docx", replace
 
 
 *=============================================================*
-* TABLE 5: Descriptive Statistics by Investor Type            *
+* TABLE 5: Delta Holdings / Net Change / Exit by Investor Type *
 *=============================================================*
 
-use "${root}/_event_sample_main.dta", clear
+use "${data}/_event_sample_ext.dta", clear
 
 local types       1 2 3 4 5 ALL
 local typelabels  `" "Passive MF" "Life Insurer" "Other Insurer" "P&C Insurer" "Variable Annuity" "All Constrained" "'
@@ -670,7 +763,7 @@ program define _statrow5, rclass
     return scalar p75 = r(p75)
 end
 
-foreach v in net_change_bp gross_buys_bp gross_sells_bp {
+foreach v in delta_holdings net_change_bp exit {
     local k = 0
     foreach t of local types {
         local ++k
@@ -695,15 +788,7 @@ putdocx text ("TABLE 5."), bold
 putdocx paragraph, halign(center)
 putdocx text ("Descriptive Statistics of Trading Outcomes by Investor Type."), bold
 putdocx paragraph, halign(both)
-putdocx text ("This table reports descriptive statistics of the three trading-outcome variables by investor ")
-putdocx text ("type within the main event-window sample, comprising bond-fund-firm-quarter observations of ")
-putdocx text ("constrained investors for bonds ever downgraded by S&P, Moody's, or Fitch, restricted to ")
-putdocx text ("relative time in [-8,+8] quarters around the first downgrade and to bond-quarters at least ")
-putdocx text ("three quarters after issuance (Clean Window). Panel A reports the quarterly net change in ")
-putdocx text ("bond holdings, Panel B reports gross buys, and Panel C reports gross sells. All three are ")
-putdocx text ("expressed in basis points of the offering amount and pre-winsorized at the 1st and 99th ")
-putdocx text ("percentiles within fundtype. Gross sells are reported as positive values. The All ")
-putdocx text ("Constrained row pools the five investor types.")
+putdocx text ("This table reports descriptive statistics of three trading outcomes by investor type within the extensive-margin event-window sample, comprising bond-fund-firm-quarter observations of constrained investors for bonds ever downgraded by S&P, Moody's, or Fitch, restricted to relative time in [-8,+8] quarters around the first downgrade and to bond-quarters at least three quarters after issuance (Clean Window). Panel A reports Delta Holdings, the quarter-on-quarter change in position scaled by offering amount and expressed in basis points, winsorized at the 1st and 99th percentiles within fundtype. Panel B reports Net Change, the eMAXX-reconciled net flow in basis points of amount outstanding, pre-winsorized within fundtype. Panel C reports Exit, equal to one in the last quarter a fund-firm holds the bond and zero otherwise (set to zero in 2023q4 to avoid right-censoring). Delta Holdings is missing for the first observed quarter of each bond-fund-firm panel; its observation count is therefore smaller than for Net Change and Exit within each investor type. The All Constrained row pools the five investor types.")
 
 putdocx table tbl = (`nrows', `ncols'), border(all, nil)
 
@@ -717,58 +802,152 @@ putdocx table tbl(1,7) = ("75th"),          bold halign(right)
 putdocx table tbl(1,.), border(top, single)
 putdocx table tbl(1,.), border(bottom, single)
 
-putdocx table tbl(2,1) = ("Panel A: Net Change (bp of offering amount)"), italic halign(left)
+putdocx table tbl(2,1) = ("Panel A: Delta Holdings (bp of offering amount)"), italic halign(left)
 putdocx table tbl(2,1), colspan(7)
 
 local row = 3
 forvalues k = 1/`ntypes' {
     local lab : word `k' of `typelabels'
-    putdocx table tbl(`row',1) = ("`lab'"),                       halign(left)
-    putdocx table tbl(`row',2) = ("`net_change_bp_n_`k''"),       halign(right)
-    putdocx table tbl(`row',3) = ("`net_change_bp_mn_`k''"),      halign(right)
-    putdocx table tbl(`row',4) = ("`net_change_bp_sd_`k''"),      halign(right)
-    putdocx table tbl(`row',5) = ("`net_change_bp_p25_`k''"),     halign(right)
-    putdocx table tbl(`row',6) = ("`net_change_bp_p50_`k''"),     halign(right)
-    putdocx table tbl(`row',7) = ("`net_change_bp_p75_`k''"),     halign(right)
+    putdocx table tbl(`row',1) = ("`lab'"),                          halign(left)
+    putdocx table tbl(`row',2) = ("`delta_holdings_n_`k''"),         halign(right)
+    putdocx table tbl(`row',3) = ("`delta_holdings_mn_`k''"),        halign(right)
+    putdocx table tbl(`row',4) = ("`delta_holdings_sd_`k''"),        halign(right)
+    putdocx table tbl(`row',5) = ("`delta_holdings_p25_`k''"),       halign(right)
+    putdocx table tbl(`row',6) = ("`delta_holdings_p50_`k''"),       halign(right)
+    putdocx table tbl(`row',7) = ("`delta_holdings_p75_`k''"),       halign(right)
     local ++row
 }
 
-putdocx table tbl(`row',1) = ("Panel B: Gross Buys (bp of offering amount)"), italic halign(left)
+putdocx table tbl(`row',1) = ("Panel B: Net Change (bp of amount outstanding)"), italic halign(left)
 putdocx table tbl(`row',1), colspan(7)
 local ++row
 
 forvalues k = 1/`ntypes' {
     local lab : word `k' of `typelabels'
-    putdocx table tbl(`row',1) = ("`lab'"),                       halign(left)
-    putdocx table tbl(`row',2) = ("`gross_buys_bp_n_`k''"),       halign(right)
-    putdocx table tbl(`row',3) = ("`gross_buys_bp_mn_`k''"),      halign(right)
-    putdocx table tbl(`row',4) = ("`gross_buys_bp_sd_`k''"),      halign(right)
-    putdocx table tbl(`row',5) = ("`gross_buys_bp_p25_`k''"),     halign(right)
-    putdocx table tbl(`row',6) = ("`gross_buys_bp_p50_`k''"),     halign(right)
-    putdocx table tbl(`row',7) = ("`gross_buys_bp_p75_`k''"),     halign(right)
+    putdocx table tbl(`row',1) = ("`lab'"),                          halign(left)
+    putdocx table tbl(`row',2) = ("`net_change_bp_n_`k''"),          halign(right)
+    putdocx table tbl(`row',3) = ("`net_change_bp_mn_`k''"),         halign(right)
+    putdocx table tbl(`row',4) = ("`net_change_bp_sd_`k''"),         halign(right)
+    putdocx table tbl(`row',5) = ("`net_change_bp_p25_`k''"),        halign(right)
+    putdocx table tbl(`row',6) = ("`net_change_bp_p50_`k''"),        halign(right)
+    putdocx table tbl(`row',7) = ("`net_change_bp_p75_`k''"),        halign(right)
     local ++row
 }
 
-putdocx table tbl(`row',1) = ("Panel C: Gross Sells (bp of offering amount, positive)"), italic halign(left)
+putdocx table tbl(`row',1) = ("Panel C: Exit (binary)"), italic halign(left)
 putdocx table tbl(`row',1), colspan(7)
 local ++row
 
 forvalues k = 1/`ntypes' {
     local lab : word `k' of `typelabels'
-    putdocx table tbl(`row',1) = ("`lab'"),                       halign(left)
-    putdocx table tbl(`row',2) = ("`gross_sells_bp_n_`k''"),      halign(right)
-    putdocx table tbl(`row',3) = ("`gross_sells_bp_mn_`k''"),     halign(right)
-    putdocx table tbl(`row',4) = ("`gross_sells_bp_sd_`k''"),     halign(right)
-    putdocx table tbl(`row',5) = ("`gross_sells_bp_p25_`k''"),    halign(right)
-    putdocx table tbl(`row',6) = ("`gross_sells_bp_p50_`k''"),    halign(right)
-    putdocx table tbl(`row',7) = ("`gross_sells_bp_p75_`k''"),    halign(right)
+    putdocx table tbl(`row',1) = ("`lab'"),                          halign(left)
+    putdocx table tbl(`row',2) = ("`exit_n_`k''"),                   halign(right)
+    putdocx table tbl(`row',3) = ("`exit_mn_`k''"),                  halign(right)
+    putdocx table tbl(`row',4) = ("`exit_sd_`k''"),                  halign(right)
+    putdocx table tbl(`row',5) = ("`exit_p25_`k''"),                 halign(right)
+    putdocx table tbl(`row',6) = ("`exit_p50_`k''"),                 halign(right)
+    putdocx table tbl(`row',7) = ("`exit_p75_`k''"),                 halign(right)
     local ++row
 }
 
 local lastrow = `row' - 1
 putdocx table tbl(`lastrow',.), border(bottom, single)
 
-putdocx save "${out}/Descriptive/Table5_DescStats_ByInvestor.docx", replace
+putdocx save "${out}/Table5_DescStats_ByInvestor.docx", replace
+
+
+*=============================================================*
+* APPENDIX TABLE B: Descriptive Stats for LI and PMF separately*
+*  Variables: Delta Holdings, Net Change, Entry, Exit          *
+*  Sample: extensive-margin event sample                       *
+*=============================================================*
+
+use "${data}/_event_sample_ext.dta", clear
+
+local appvars "delta_holdings net_change_bp entry exit"
+local applabs `" "Delta Holdings (Turnover Ratio Q, bp)" "Net Change (bp)" "Entry" "Exit" "'
+local nvars : word count `appvars'
+
+* PassiveInvestor codes: 1 = Passive MF, 2 = Life Insurer
+foreach inv in 2 1 {
+    foreach v of local appvars {
+        qui sum `v' if PassiveInvestor == `inv', detail
+        local `v'_`inv'_n   = string(r(N),    "%12.0gc")
+        local `v'_`inv'_mn  = string(r(mean), "%9.3f")
+        local `v'_`inv'_sd  = string(r(sd),   "%9.3f")
+        local `v'_`inv'_p25 = string(r(p25),  "%9.3f")
+        local `v'_`inv'_p50 = string(r(p50),  "%9.3f")
+        local `v'_`inv'_p75 = string(r(p75),  "%9.3f")
+    }
+}
+
+local nrows = 1 + 2 * (1 + `nvars')
+local ncols = 7
+
+putdocx clear
+putdocx begin, pagesize(A4) margin(all, 0.8in)
+
+putdocx paragraph, halign(center)
+putdocx text ("APPENDIX TABLE B."), bold
+putdocx paragraph, halign(center)
+putdocx text ("Descriptive Statistics of Holdings Outcomes by Investor Type."), bold
+putdocx paragraph, halign(both)
+putdocx text ("This appendix table reports descriptive statistics for the four outcome variables -- Delta Holdings (Turnover Ratio Q, in basis points of offering amount, winsorized 1/99 by fundtype), Net Change (eMAXX-reconciled net flow, in basis points of amount outstanding, pre-winsorized by fundtype), Entry, and Exit -- separately for Life Insurers and Passive Mutual Funds. The sample is the extensive-margin event-window sample (constrained investors, bonds ever downgraded by S&P, Moody's, or Fitch, event time [-8, +8], Clean Window), without restricting to non-missing Delta Holdings. Delta Holdings is missing for the first observed quarter of each bond-fund-firm panel; its observation count is therefore smaller than for the remaining outcomes within each investor type. Entry equals one in the first quarter the fund-firm holds the bond; Exit equals one in the last quarter the fund-firm holds the bond (set to zero in 2023q4 to avoid right-censoring).")
+
+putdocx table tbl = (`nrows', `ncols'), border(all, nil)
+
+putdocx table tbl(1,1) = ("Variable"),    bold halign(left)
+putdocx table tbl(1,2) = ("Obs."),        bold halign(right)
+putdocx table tbl(1,3) = ("Mean"),        bold halign(right)
+putdocx table tbl(1,4) = ("Std. Dev."),   bold halign(right)
+putdocx table tbl(1,5) = ("25th"),        bold halign(right)
+putdocx table tbl(1,6) = ("Median"),      bold halign(right)
+putdocx table tbl(1,7) = ("75th"),        bold halign(right)
+putdocx table tbl(1,.), border(top, single)
+putdocx table tbl(1,.), border(bottom, single)
+
+local row = 2
+
+* Section: Life Insurer (PassiveInvestor == 2)
+putdocx table tbl(`row',1) = ("Life Insurer"), italic halign(left)
+putdocx table tbl(`row',1), colspan(7)
+local ++row
+
+forvalues k = 1/`nvars' {
+    local v   : word `k' of `appvars'
+    local lab : word `k' of `applabs'
+    putdocx table tbl(`row',1) = ("`lab'"),         halign(left)
+    putdocx table tbl(`row',2) = ("``v'_2_n'"),     halign(right)
+    putdocx table tbl(`row',3) = ("``v'_2_mn'"),    halign(right)
+    putdocx table tbl(`row',4) = ("``v'_2_sd'"),    halign(right)
+    putdocx table tbl(`row',5) = ("``v'_2_p25'"),   halign(right)
+    putdocx table tbl(`row',6) = ("``v'_2_p50'"),   halign(right)
+    putdocx table tbl(`row',7) = ("``v'_2_p75'"),   halign(right)
+    local ++row
+}
+
+* Section: Passive Mutual Fund (PassiveInvestor == 1)
+putdocx table tbl(`row',1) = ("Passive Mutual Fund"), italic halign(left)
+putdocx table tbl(`row',1), colspan(7)
+local ++row
+
+forvalues k = 1/`nvars' {
+    local v   : word `k' of `appvars'
+    local lab : word `k' of `applabs'
+    putdocx table tbl(`row',1) = ("`lab'"),         halign(left)
+    putdocx table tbl(`row',2) = ("``v'_1_n'"),     halign(right)
+    putdocx table tbl(`row',3) = ("``v'_1_mn'"),    halign(right)
+    putdocx table tbl(`row',4) = ("``v'_1_sd'"),    halign(right)
+    putdocx table tbl(`row',5) = ("``v'_1_p25'"),   halign(right)
+    putdocx table tbl(`row',6) = ("``v'_1_p50'"),   halign(right)
+    putdocx table tbl(`row',7) = ("``v'_1_p75'"),   halign(right)
+    local ++row
+}
+
+local lastrow = `row' - 1
+putdocx table tbl(`lastrow',.), border(bottom, single)
+
+putdocx save "${out}/AppendixB_Stats_LI_vs_PMF.docx", replace
 
 
 ********************************************************************

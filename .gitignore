@@ -1,39 +1,29 @@
-# ===================================================================
-# Replication package — only Stata do-files and the README are tracked.
-# Everything below is excluded so proprietary data and local artifacts
-# can never be pushed to GitHub.
-# ===================================================================
+# ============================================================================
+# DATA — too large for GitHub (~100 GB); distributed separately.
+# Keep the build .do files in Data/<source>/, exclude all actual data.
+# ============================================================================
 
-# --- Proprietary / large data (NEVER upload) ---
-*.dta
-*.csv
-*.txt
-*.dat
-*.xls
-*.xlsx
-*.parquet
-*.zip
-*.7z
-*.gz
+# Raw vendor data folders (huge) — exclude wholesale
+Data/eMAXX/Raw eMAXX/
+Data/**/Raw Data/
 
-# --- Stata swap / backup / log files ---
-*.stswp
-~*.do.stswp
-~$*
-*.log
-*.smcl
+# Built data + working files
+Data/Working Files/
+Data/**/*.dta
+Data/**/*.csv
+Data/**/*.txt
+Data/**/*.xls
+Data/**/*.xlsx
+Data/**/*.pdf
 
-# --- Stata graph / output artifacts ---
-*.gph
-*.eps
-*.pdf
-*.png
-*.tex
-Figures and Tables/
+# ---- Generated analysis output --------------------------------------------
+Paper Replication/Figures and Tables/
 
-# --- macOS / Dropbox cruft ---
+# ---- Internal working notes (delete before submission) --------------------
+_INTERNAL_DELETE_BEFORE_SUBMISSION/
+
+# ---- OS / editor / logs ---------------------------------------------------
 .DS_Store
-Icon?
-.dropbox
-.dropbox.attr
-._*
+*.stswp
+~*
+*.log

@@ -1,19 +1,45 @@
 ********************************************************************
-*** 0_1_Master Working File
+*** 0. Build Master Working File
+***
+*** Input:  ${data}/eMAXXMergentFISD_SampleFinalCDS_WV.dta
+*** Output: ${data}/_master.dta
+***
+*** _master.dta is the canonical disaggregated panel
+*** (issueID x fundid x firmid x qdate) for all downstream analysis.
+*** Restricts to long-term investor types (LI, OI, PC, PMF, VA);
+*** Active Mutual Funds are excluded.
 ********************************************************************
 
+clear all
+set more off
+set varabbrev off
+version 17
+
 * ============= SET PATHS =============
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data"
-global eMAXX "${root}/eMAXX" 
+global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+global data "${root}/Data/Working Files"
 * =====================================
 
-use "${root}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
 
-* Drop Active Mutual Funds
+use "${data}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
+
+* ------------------------------------------------------------------
+* Sanity check: confirm the new sample-creation variables flowed through.
+* If you see an error here, re-run 0_0_Sample_Creation.do.
+* ------------------------------------------------------------------
+foreach v in delta_holdings pos_delta_holdings neg_delta_holdings ttm {
+    cap confirm variable `v'
+    if _rc {
+        di as err "Variable '`v'' not found in _WV.dta -- re-run sample creation."
+        exit 111
+    }
+}
+
+* Drop Active Mutual Funds explicitly, then keep 5 long-term investor types
 drop if fundtype_det_num == 4
 keep if inlist(fundtype_det_num, 1, 2, 3, 5, 8)
 
-* Investor coding 
+* Investor coding -- PassiveInvestor (0-indexed for figures / pooled specs)
 cap drop PassiveInvestor
 gen PassiveInvestor = 0
 replace PassiveInvestor = 1 if fundtype_det_num == 5
@@ -26,7 +52,7 @@ label define PassiveInvestor_lb 0 "Other" 1 "Passive MF" 2 "Life Insurer" ///
 label values PassiveInvestor PassiveInvestor_lb
 label variable PassiveInvestor "Investor Type"
 
-* Constr_Investor 
+* Constr_Investor -- 0-indexed coding with Passive MF as baseline
 cap drop Constr_Investor
 gen Constr_Investor = .
 replace Constr_Investor = 0 if fundtype_det_num == 5
@@ -44,6 +70,13 @@ cap drop DowngradeAny
 gen byte DowngradeAny = (DowngradeSPR == 1 | DowngradeMR == 1 | DowngradeFR == 1)
 label variable DowngradeAny "Any agency downgrade in this bond-quarter"
 
+* Any-agency upgrade indicator
+cap drop UpgradeSPR UpgradeMR UpgradeFR UpgradeAny
+    gen byte UpgradeSPR = (SPRchange > 0) if !missing(SPRchange)
+    gen byte UpgradeMR  = (MRchange  > 0) if !missing(MRchange)
+    gen byte UpgradeFR  = (FRchange  > 0) if !missing(FRchange)
+    gen byte UpgradeAny = (UpgradeSPR == 1) | (UpgradeMR == 1) | (UpgradeFR == 1)
+
 * Clean window (excludes first 2 quarters post-issuance)
 cap drop Clean_Window
 gen byte Clean_Window = (qdate > qoffering + 2)
@@ -56,11 +89,24 @@ bysort issueID: egen CDS_data = max(_cds_obs)
 drop _cds_obs
 label variable CDS_data "Bond ever has CDS spread data"
 
-* Investment Manager indicator 
-gen byte is_INM = (firm_code == "INM")
-label variable is_INM "External manager (firm_code == INM)"
+* INM manager indicator (firm-level dummy used in baseline Table 8)
+* Adjust the string match below if INM has a different code/name in your data
+cap drop is_INM
+cap confirm string variable firmid
+if !_rc {
+    gen byte is_INM = (firmid == "INM")
+}
+else {
+    qui levelsof firmid, local(_fids) clean
+    gen byte is_INM = 0
+    foreach f of local _fids {
+        local _lab : label (firmid) `f', strict
+        if `"`_lab'"' == "INM" replace is_INM = 1 if firmid == `f'
+    }
+}
+label variable is_INM "firmid == INM"
 
-* Log of amount outstanding 
+* log of amount outstanding (control variable for robustness)
 cap drop log_aoutstanding
 gen log_aoutstanding = log(amount_outstanding)
 label variable log_aoutstanding "log(Amount Outstanding)"
@@ -69,6 +115,7 @@ label variable log_aoutstanding "log(Amount Outstanding)"
 ********************************************************************
 *** NAIC composite rating
 *** 3 ratings -> median; 2 ratings -> lower (rowmax of *_num); 1 -> that one
+*** Scale: 1 = AAA, ..., 10 = BBB-, 11 = BB+, ...  (cutoff: <= 10 is IG)
 ********************************************************************
 
 cap drop NAIC_num
@@ -100,7 +147,8 @@ replace naic_bucket = 0 if !missing(NAIC_num) & NAIC_num >  10
 
 ********************************************************************
 *** Bond-quarter NAIC event indicators
-
+*** Built on a deduplicated bond-quarter panel, then merged back
+*** Events are cleaned of any same-event in the prior 8 quarters
 ********************************************************************
 
 preserve
@@ -139,7 +187,7 @@ restore
 merge m:1 issueID qdate using `naic_events', keep(master match) nogen
 
 
-save "${root}/_master.dta", replace
+save "${data}/_master.dta", replace
 
 
 ********************************************************************
