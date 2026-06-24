@@ -1,9 +1,9 @@
 ********************************************************************************
 *** 0_run_paper.do  --  PAPER ANALYSIS  (reproduction Option ii: start here)
 ***
-*** Produces every figure and table in the paper from the estimation master
-*** file Data/Working Files/_master.dta. If you are using the shipped working
-*** files (the default), this is the only run-file you need.
+*** Builds the estimation master (_WV.dta -> _master.dta via Build_Master.do)
+*** and then produces every figure and table in the paper. With the shipped
+*** working files this is the only run-file you need.
 ***
 *** HOW TO RUN:  (1) edit the ${REPL} line in setup.do, (2) run setup.do,
 ***              (3) run this file.  No 'cd' needed -- setup.do uses absolute paths.
@@ -22,6 +22,9 @@ if "${REPL}" == "" {
 }
 
 global C "${REPL}/Paper Replication/Code"
+
+* Build the estimation master file from the working sample (_WV.dta -> _master.dta)
+do "${REPL}/Sample Replication/Build_Master.do"
 
 do "${C}/1_Descriptives.do"
 do "${C}/2_Baseline_Analysis.do"

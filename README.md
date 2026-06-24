@@ -19,7 +19,8 @@ Use the shipped working files and reproduce every figure and table directly.
 1. Open `setup.do`, edit the single `${REPL}` line to point at this folder.
 2. In Stata, **run `setup.do`**, then run `Paper Replication/0_run_paper.do`. *(No `cd` needed — `setup.do` uses absolute paths.)*
 
-Reads `Data/Working Files/_master.dta`; writes to `Paper Replication/Figures and Tables/`.
+Builds `_master.dta` from the shipped `_WV.dta` (via `Build_Master.do`), then writes
+all output to `Paper Replication/Figures and Tables/`.
 
 ### Option i — Full reconstruction (slow, from raw vendor data)
 Rebuild every source database from raw, then the sample, then the analysis.
