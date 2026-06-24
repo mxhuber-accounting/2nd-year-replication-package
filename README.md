@@ -30,12 +30,12 @@ Rebuild every source database from raw, then the sample, then the analysis.
 ---
 
 ## The four FROZEN reference files — do not overwrite
-These live in `Data/` root and reproduce the **exact** paper findings:
+These live in `Data/Reference Files/` and reproduce the **exact** paper findings:
 ```
-Data/CapitalIQ_Final.dta
-Data/CDS_2012_2020_GVKEY-CUSIP.dta
-Data/MergentFISD_QuarterlyPanel.dta
-Data/WRDS_Bond_Returns.dta
+Data/Reference Files/CapitalIQ_Final.dta
+Data/Reference Files/CDS_2012_2020_GVKEY-CUSIP.dta
+Data/Reference Files/MergentFISD_QuarterlyPanel.dta
+Data/Reference Files/WRDS_Bond_Returns.dta
 ```
 With `mode = reference` (default) the pipeline reads these. `mode = regenerate`
 reads the freshly rebuilt source outputs in `Data/<source>/` instead. **Sample
@@ -71,8 +71,8 @@ Data/                         ← all data; each source folder holds its OWN bui
   CapitalIQ/    (CapitalIQ_DO.do + Raw Data/ + CapitalIQ_Final)
   WRDS Bond Returns/ (WRDS_Bond_Returns.do + Raw Data/)
   Markit/       (CDS Data.do + Raw Data/ + CDS panel)
-  Working Files/(SampleFinalCDS, _WV, _master)
-  + the four FROZEN reference files (see above)
+  Working Files/   (SampleFinalCDS, _WV, _master)
+  Reference Files/ (the four FROZEN read-only reference inputs — see above)
 ```
 
 > **Data on GitHub:** the `Data/` tree is ~100 GB and is *not* committed (it is

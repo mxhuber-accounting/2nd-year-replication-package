@@ -23,6 +23,7 @@ global capiq     "${data}/CapitalIQ"           // CapitalIQ outlook/watch panel
 global wrds      "${data}/WRDS Bond Returns"   // WRDS bond yields, amount outstanding, spreads
 global markit    "${data}/Markit"              // Markit CDS panel
 global working   "${data}/Working Files"       // sample outputs: SampleFinalCDS, _WV, _master
+global refdir    "${data}/Reference Files"     // the four FROZEN reference inputs (read-only)
 
 * ====================== REPRODUCTION MODE =================================
 * "reference"  = use the four FROZEN safety files in Data/ root  -> reproduces
@@ -30,19 +31,18 @@ global working   "${data}/Working Files"       // sample outputs: SampleFinalCDS
 * "regenerate" = use the freshly rebuilt source outputs from Sample Replication.
 global mode "reference"
 
-* ---- FROZEN reference files in Data/ root -- DO NOT OVERWRITE ------------
+* ---- FROZEN reference files in Data/Reference Files/ -- DO NOT OVERWRITE --
 * These four reproduce the exact paper results. "1 Sample Replication" writes
 * ONLY to Data/<source>/ and Working Files/ -- it never touches these.
-global ref_mergent "${data}/MergentFISD_QuarterlyPanel.dta"
-global ref_capiq   "${data}/CapitalIQ_Final.dta"
-global ref_cds     "${data}/CDS_2012_2020_GVKEY-CUSIP.dta"
-global ref_wrds    "${data}/WRDS_Bond_Returns.dta"
+global ref_mergent "${refdir}/MergentFISD_QuarterlyPanel.dta"
+global ref_capiq   "${refdir}/CapitalIQ_Final.dta"
+global ref_cds     "${refdir}/CDS_2012_2020_GVKEY-CUSIP.dta"
+global ref_wrds    "${refdir}/WRDS_Bond_Returns.dta"
 
-* Enforce read-only on the four reference files so NO run -- including a full
-* sample reproduction -- can overwrite them (Mac/Linux; silently skipped on Windows).
+* Enforce read-only on the four reference files 
 cap shell chmod 444 "${ref_mergent}" "${ref_capiq}" "${ref_cds}" "${ref_wrds}"
 di as text  "{hline 78}"
-di as result "  FROZEN reference files (Data/ root) are READ-ONLY  ->  exact paper results."
+di as result "  FROZEN reference files (Data/Reference Files/) are READ-ONLY -> exact paper results."
 di as text   "  Sample reproduction writes only to Data/<source>/ and never overwrites them."
 di as text  "{hline 78}"
 
@@ -64,7 +64,7 @@ else {
 * ---- Output -------------------------------------------------------------
 global figtab    "${REPL}/Paper Replication/Figures and Tables"
 
-* ---- Housekeeping -------------------------------------------------------
+* ---- Final Adjustments -------------------------------------------------------
 set more off
 cap mkdir "${working}"
 cap mkdir "${figtab}"
