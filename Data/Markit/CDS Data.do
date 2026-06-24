@@ -7,7 +7,7 @@
 * Paths repointed to the package. Raw inputs live in Raw Data/; the loops
 * regenerate per-day .dta intermediates (CDSpre2018/, CDSpost2018/) under there too.
 * NOTE: full rebuild reads ~5,000 daily CSVs (~55 GB); ~35-50 min (mostly imports).
-global cds "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/Markit/Raw Data"
+global cds "${REPL}/Data/Markit/Raw Data"
 cap mkdir "${cds}/CDSpre2018"
 cap mkdir "${cds}/CDSpost2018"
 

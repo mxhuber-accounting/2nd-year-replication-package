@@ -2,8 +2,8 @@
 *** UNIFIED MERGENT FISD QUARTERLY RATING PANEL  (final)
 ********************************************************************************
 
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/MergentFISD/Raw Data"
-global wf   "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/MergentFISD"
+global root "${REPL}/Data/MergentFISD/Raw Data"
+global wf   "${REPL}/Data/MergentFISD"
 cap mkdir "${wf}"
 
 *** Convert CSV Files

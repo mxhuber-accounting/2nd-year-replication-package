@@ -24,7 +24,7 @@ set varabbrev off
 version 17
 
 * ============= SET PATHS =============
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+global root "${REPL}"
 global comp "${root}/Data/eMAXX"                  // appended eMAXX *.dta
 global rate "${root}/Data/MergentFISD"         // MergentFISD ratings + LSEG outlook/watch
 global ciq  "${root}/Data/CapitalIQ"           // CapitalIQ outlook/watch

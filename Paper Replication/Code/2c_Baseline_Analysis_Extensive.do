@@ -22,7 +22,7 @@ set varabbrev off
 version 17
 
 * ============= SET PATHS =============
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+global root "${REPL}"
 global data "${root}/Data/Working Files"
 global out  "${root}/Paper Replication/Figures and Tables/Baseline_Analysis_Extensive"
 * =====================================
@@ -665,8 +665,8 @@ putdocx table tbl = (`total_rows', `total_cols'), border(all, nil)
 putdocx table tbl(1,1) = (""), bold halign(left)
 putdocx table tbl(1,2) = ("Entry"), bold halign(center)
 putdocx table tbl(1,2), colspan(2)
-putdocx table tbl(1,4) = ("Exit"),  bold halign(center)
-putdocx table tbl(1,4), colspan(2)
+putdocx table tbl(1,3) = ("Exit"),  bold halign(center) 
+putdocx table tbl(1,3), colspan(2)                        
 putdocx table tbl(1,.), border(top, single)
 
 * Second header: balanced status

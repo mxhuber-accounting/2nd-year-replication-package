@@ -8,7 +8,7 @@ set varabbrev off
 version 17
 
 * ============= SET PATHS =============
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+global root "${REPL}"
 global data "${root}/Data/Working Files"
 global out  "${root}/Paper Replication/Figures and Tables/Threshold"
 * =====================================
@@ -523,7 +523,7 @@ set varabbrev off
 version 17
 
 * ============= SET PATHS =============
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+global root "${REPL}"
 global data "${root}/Data/Working Files"
 global out  "${root}/Paper Replication/Figures and Tables/Threshold"
 * =====================================

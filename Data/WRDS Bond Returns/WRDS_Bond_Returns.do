@@ -3,7 +3,7 @@
 *       1) Prepare WRDS Bond Returns Data
 **********************************************************************
 
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/WRDS Bond Returns"
+global root "${REPL}/Data/WRDS Bond Returns"
 
 *       1) Prepare WRDS Bond Returns Data
 **********************************************************************

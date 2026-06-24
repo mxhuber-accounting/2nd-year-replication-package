@@ -6,8 +6,8 @@
 **********************************************************************
 
 
-global root "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/eMAXX/Raw eMAXX"
-global outdir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/eMAXX/"
+global root "${REPL}/Data/eMAXX/Raw eMAXX"
+global outdir "${REPL}/Data/eMAXX/"
 
 {
 *       1) Import and Process all HOLDING.txt files

@@ -14,7 +14,7 @@
 *** Test Processing
 ********************************************************************************
 
-local file "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ/Raw Data/KeyDevelopment Screening Report-11.xls"
+local file "${REPL}/Data/CapitalIQ/Raw Data/KeyDevelopment Screening Report-11.xls"
 
 import excel "`file'", clear
 
@@ -112,8 +112,8 @@ compress
 clear
 set more off
 
-local raw_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ/Raw Data"
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local raw_dir "${REPL}/Data/CapitalIQ/Raw Data"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 cd "`raw_dir'"
 local files : dir . files "*.xls"
@@ -206,7 +206,7 @@ drop if !ustrregexm(prev_rating, "`sp_regex'") & rating_action != "New" & prev_r
 save "`out_dir'/CapitalIQ_KeyDev.dta", replace
 }
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 use "`out_dir'/CapitalIQ_KeyDev.dta", clear
 
@@ -226,7 +226,7 @@ restore
 
 // CUSIP
 {
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 import delimited "`raw_dir'/CIQ-CUSIP.csv", clear
 
@@ -255,7 +255,7 @@ save "`out_dir'/CIQ-CUSIP-6.dta", replace
 // GVKEY
 {
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 import delimited "`raw_dir'/CIQ-CUSIP.csv", clear
 
@@ -278,7 +278,7 @@ save "`out_dir'/CIQ-GVKEY.dta", replace
 
 // Merge
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 use "`out_dir'/CapitalIQ_KeyDev.dta", clear
 
 {
@@ -301,7 +301,7 @@ compress
 save "`out_dir'/CapitalIQ_KeyDev_CUSIP-6.dta", replace
 
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 use "`out_dir'/CapitalIQ_KeyDev_CUSIP-6.dta", clear
 
@@ -331,7 +331,7 @@ sort issuercus qdate
 save "`out_dir'/CapitalIQ_KeyDev_panel.dta", replace
 
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 use "`out_dir'/CapitalIQ_KeyDev_panel.dta", clear
 drop _merge start end
@@ -398,7 +398,7 @@ save "`out_dir'/CapitalIQ_Panel.dta", replace
 *** Generate Rating Action Codes
 ********************************************************************************
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 use "`out_dir'/CapitalIQ_Panel.dta", clear
 
 gen CIQ_num = .
@@ -523,7 +523,7 @@ label values watch_num watch_lbl
 
 save "`out_dir'/CapitalIQ_Final", replace
 
-local out_dir "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package/Data/CapitalIQ"
+local out_dir "${REPL}/Data/CapitalIQ"
 
 use "`out_dir'/CapitalIQ_Final", clear
 
