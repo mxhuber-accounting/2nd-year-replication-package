@@ -168,6 +168,7 @@ preserve
     graph combine desc_li desc_pmf, rows(1) ///
         graphregion(color(white)) name(desc_combined, replace)
     graph export "${out}/Figure_extensive_descriptive.png", replace width(2400)
+    copy "${out}/Figure_extensive_descriptive.png" "${paperfigs}/F04_Figure4_Extensive Margin Descriptive.png", replace   // paper-folder copy
 restore
 
 

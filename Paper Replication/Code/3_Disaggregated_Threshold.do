@@ -237,6 +237,7 @@ graph combine li_panel pmf_panel, cols(2) ///
     name(fig8_eventstudy, replace)
 
 graph export "${out}/Figure8_threshold_eventstudy.png", replace width(2400)
+copy "${out}/Figure8_threshold_eventstudy.png" "${paperfigs}/F06_Figure6_Trading Around the IG Threshold Event Time.png", replace   // paper-folder copy
 restore
 
 *------------------------------------------------------------
@@ -404,6 +405,7 @@ grc1leg li_desc_win pmf_desc_win, cols(2)                                       
     name(fig_threshold_desc_window, replace)
 
 graph export "${out}/Figure_threshold_descriptive_window.png", replace width(2400)
+copy "${out}/Figure_threshold_descriptive_window.png" "${paperfigs}/F05_Figure5_PanelA_Trading by Event Window Descriptive.png", replace   // paper-folder copy
 restore
 
 *------------------------------------------------------------
@@ -503,6 +505,7 @@ graph combine li_coef_win pmf_coef_win, cols(2)                                 
     name(fig_threshold_coef_window, replace)
 
 graph export "${out}/Figure_threshold_coef_window.png", replace width(2400)
+copy "${out}/Figure_threshold_coef_window.png" "${paperfigs}/F05_Figure5_PanelB_Trading by Event Window Coefficients.png", replace   // paper-folder copy
 
 restore
 ********************************************************************

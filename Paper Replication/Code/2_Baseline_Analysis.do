@@ -186,6 +186,7 @@ putdocx table tbl(`r',2), colspan(`n_wins')
 putdocx table tbl(`r',.), border(bottom, single)
 
 putdocx save "${out}/table1_baseline_constr_investor.docx", replace
+copy "${out}/table1_baseline_constr_investor.docx" "${paperfigs}/T03_Table3_Baseline by Investor Type.docx", replace   // paper-folder copy
 }
 
 
@@ -411,6 +412,7 @@ forvalues j = 1/`n_models' {
 putdocx table tbl(`r',.), border(bottom, single)
 
 putdocx save "${out}/table2_robustness_FE_controls.docx", replace
+copy "${out}/table2_robustness_FE_controls.docx" "${paperfigs}/T04_Table4_Robustness FE and Controls.docx", replace   // paper-folder copy
 }
 
 ********************************************************************
@@ -1103,6 +1105,7 @@ forvalues j = 1/`n_models' {
 putdocx table tbl(`r',.), border(bottom, single)
 
 putdocx save "${out}/table6_outlook_triple_unbal_bal.docx", replace
+copy "${out}/table6_outlook_triple_unbal_bal.docx" "${paperfigs}/T05_Table5_Outlook Triple.docx", replace   // paper-folder copy
 }
 
 
@@ -1290,6 +1293,7 @@ forvalues j = 1/`n_models' {
 putdocx table tbl(`r',.), border(bottom, single)
 
 putdocx save "${out}/table7_cds_triple_unbal_bal.docx", replace
+copy "${out}/table7_cds_triple_unbal_bal.docx" "${paperfigs}/T06_Table6_CDS Triple.docx", replace   // paper-folder copy
 }
 
 
@@ -1657,6 +1661,7 @@ forvalues j = 1/`n_models' {
 putdocx table tbl(`r',.), border(bottom, single)
 
 putdocx save "${out}/table9_robustness_DV.docx", replace
+copy "${out}/table9_robustness_DV.docx" "${paperfigs}/T07_Table7_PLACEHOLDER to swap.docx", replace   // paper-folder copy
 }
 
 

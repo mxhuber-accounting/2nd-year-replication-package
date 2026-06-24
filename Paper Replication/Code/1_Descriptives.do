@@ -175,6 +175,7 @@ preserve
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
     graph export "${out}/Figure1_WithineMAXX.png", replace width(2400)
+    copy "${out}/Figure1_WithineMAXX.png" "${paperfigs}/F01_Figure1_eMAXX Coverage 2012Q1-2023Q4.png", replace   // paper-folder copy
 restore
 }
 
@@ -222,6 +223,7 @@ preserve
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
     graph export "${out}/Figure2_AmtOutstanding.png", replace width(2400)
+    copy "${out}/Figure2_AmtOutstanding.png" "${paperfigs}/F02_Figure2_Amount Outstanding Coverage 2012Q1-2023Q4.png", replace   // paper-folder copy
 restore
 }
 
@@ -406,6 +408,7 @@ forvalues i = 7/8 {
 putdocx table tbl(11,.), border(bottom, single)
 
 putdocx save "${out}/Table1_SampleSelection.docx", replace
+copy "${out}/Table1_SampleSelection.docx" "${paperfigs}/T01_Table1_Sample Construction and Composition.docx", replace   // paper-folder copy
 
 
 *=============================================================*
@@ -529,6 +532,7 @@ preserve
         graphregion(color(white)) bgcolor(white) ///
         plotregion(margin(medsmall) lcolor(gs10))
     graph export "${out}/Figure4_DeltaHoldings_RelTime.png", replace width(2400)
+    copy "${out}/Figure4_DeltaHoldings_RelTime.png" "${paperfigs}/F03_Figure3_PanelA_Delta Holdings by Event Quarter.png", replace   // paper-folder copy
 restore
 }
 
@@ -578,6 +582,7 @@ preserve
         plotregion(margin(medsmall) lcolor(gs10))
 
     graph export "${out}/Figure4_DeltaHoldings_RelYear.png", replace width(2400)
+    copy "${out}/Figure4_DeltaHoldings_RelYear.png" "${paperfigs}/F03_Figure3_PanelB_Delta Holdings by Event Year.png", replace   // paper-folder copy
 restore
 }
 
@@ -734,6 +739,7 @@ local lastrow = `row' - 1
 putdocx table tbl(`lastrow',.), border(bottom, single)
 
 putdocx save "${out}/Table4_DescriptiveStatistics.docx", replace
+copy "${out}/Table4_DescriptiveStatistics.docx" "${paperfigs}/T02_Table2_Descriptive Statistics.docx", replace   // paper-folder copy
 
 
 *=============================================================*

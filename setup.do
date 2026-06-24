@@ -63,8 +63,10 @@ else {
 
 * ---- Output -------------------------------------------------------------
 global figtab    "${REPL}/Paper Replication/Figures and Tables"
+global paperfigs "${figtab}/Tables and Figures in Paper"   // curated, numbered subset used in the paper
 
 * ---- Final Adjustments -------------------------------------------------------
 set more off
 cap mkdir "${working}"
 cap mkdir "${figtab}"
+cap mkdir "${paperfigs}"
