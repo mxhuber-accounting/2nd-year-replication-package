@@ -1,8 +1,8 @@
 # Sample Replication (data construction)
 
 Rebuilds the analysis sample **from raw vendor data** (reproduction Option i).
-Run `0_run_sample.do` from the package root with `global mode "regenerate"` set
-in `setup.do`.
+Set `global mode "regenerate"` in `setup.do`, **run `setup.do`**, then run
+`0_run_sample.do` (no `cd` needed).
 
 Pipeline:
 1. **Source databases** — each builds from its own raw inputs and lives in

@@ -15,7 +15,12 @@
 *** The four FROZEN reference files in Data/ root are never written here.
 ********************************************************************************
 
-do "setup.do"
+* setup.do must be run FIRST (edit its REPL line, set mode "regenerate", run it).
+* It works from any working directory. This orchestrator assumes globals are set.
+if "${REPL}" == "" {
+    di as error "Run setup.do first (edit its REPL line + set mode regenerate), then run this file."
+    exit 198
+}
 
 * ---- 1) Source databases (each self-contained; reads its own Raw Data/) ----
 do "${emaxx}/eMAXX_1998-2023.do"          // eMAXX *_Complete.dta            (hours)

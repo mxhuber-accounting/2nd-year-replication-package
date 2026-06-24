@@ -2,7 +2,7 @@
 
 Reproduces every figure and table in the paper from
 `Data/Working Files/_master.dta` (reproduction Option ii — the recommended
-starting point). Run `0_run_paper.do` from the package root.
+starting point). Run `setup.do` first, then `0_run_paper.do` (no `cd` needed).
 
 `Code/`:
 - `1_Descriptives.do` — sample selection, descriptive statistics, main figures

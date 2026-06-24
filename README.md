@@ -17,14 +17,14 @@ upstream to start**.
 ### Option ii — Paper only (fast, recommended)
 Use the shipped working files and reproduce every figure and table directly.
 1. Open `setup.do`, edit the single `${REPL}` line to point at this folder.
-2. In Stata, `cd` to this folder, then run `Paper Replication/0_run_paper.do`.
+2. In Stata, **run `setup.do`**, then run `Paper Replication/0_run_paper.do`. *(No `cd` needed — `setup.do` uses absolute paths.)*
 
 Reads `Data/Working Files/_master.dta`; writes to `Paper Replication/Figures and Tables/`.
 
 ### Option i — Full reconstruction (slow, from raw vendor data)
 Rebuild every source database from raw, then the sample, then the analysis.
 1. In `setup.do`, set `${REPL}` **and** `global mode "regenerate"`.
-2. `cd` to this folder, run `Sample Replication/0_run_sample.do` (several hours),
+2. **Run `setup.do`**, then `Sample Replication/0_run_sample.do` (several hours),
    then `Paper Replication/0_run_paper.do`.
 
 ---
