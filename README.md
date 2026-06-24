@@ -111,7 +111,6 @@ Run `_setup.do` once per session before any analysis file. Each analysis file is
 
 - `offering_amt` from Mergent FISD is stored in thousands of dollars. All scaling in basis points uses this convention.
 - Bond-quarters where any single fund-firm position or the bond-quarter aggregate of `paramt` exceeds amount outstanding (with a 0.1% tolerance for rounding) are dropped as data errors.
-- Per-agency downgrade indicators are coded missing — not zero — when the agency does not rate the bond. This matters for any-agency rollups and for sample-stats denominators; downstream regressions use `DowngradeAny`, which handles this correctly via Stata's missing-value evaluation.
 
 ## Reproducing the paper
 

@@ -100,6 +100,7 @@ replace naic_bucket = 0 if !missing(NAIC_num) & NAIC_num >  10
 
 ********************************************************************
 *** Bond-quarter NAIC event indicators
+
 ********************************************************************
 
 preserve
@@ -125,7 +126,7 @@ preserve
         drop pri8_`v'
     }
 
-    * First fallen-angel date per bond 
+    * First fallen-angel date per bond (used by threshold analysis)
     gen _t_fa = qdate if fa == 1
     bysort issueID: egen first_fa = min(_t_fa)
     format first_fa %tq

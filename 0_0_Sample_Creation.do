@@ -1,4 +1,6 @@
-
+********************************************************************
+*** 0_0_Sample_Creation
+********************************************************************
 
 * ============= PATHS =============
 
@@ -89,7 +91,6 @@ format qmat %tq
 gen ttm = (qmat - qdate) / 4
 label variable ttm "Time to maturity (years)"
 
-destring firmid, replace
 encode issuecus,  gen(issueID)
 encode issuercus, gen(issuerID)
 
@@ -148,7 +149,7 @@ drop if (missing(SPR_num) | SPR_num == 0)  ///
       & (missing(MR_num)  | MR_num  == 0)  ///
       & (missing(FR_num)  | FR_num  == 0)  ///
 
-drop if firmid == 00000 // unidenfifiable Management Firm
+drop if firmid == "00000" // unidenfifiable Management Firm
 
 * Becker and Ivashina (2015) bond-type restrictions
 drop if convertible              == "Y"
