@@ -40,7 +40,12 @@ Data/WRDS_Bond_Returns.dta
 With `mode = reference` (default) the pipeline reads these. `mode = regenerate`
 reads the freshly rebuilt source outputs in `Data/<source>/` instead. **Sample
 Replication only ever writes to `Data/<source>/` and `Data/Working Files/` — it
-never touches the four files above.**
+never targets the four files above.**
+
+**Enforced:** the four files are shipped **read-only**, and `setup.do` re-asserts
+the read-only lock on every run. So even a full sample reproduction — or a
+reproducer who has run it before — cannot overwrite them; the OS denies the write.
+(To deliberately refresh one, `chmod u+w` it first.)
 
 ---
 

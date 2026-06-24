@@ -38,6 +38,14 @@ global ref_capiq   "${data}/CapitalIQ_Final.dta"
 global ref_cds     "${data}/CDS_2012_2020_GVKEY-CUSIP.dta"
 global ref_wrds    "${data}/WRDS_Bond_Returns.dta"
 
+* Enforce read-only on the four reference files so NO run -- including a full
+* sample reproduction -- can overwrite them (Mac/Linux; silently skipped on Windows).
+cap shell chmod 444 "${ref_mergent}" "${ref_capiq}" "${ref_cds}" "${ref_wrds}"
+di as text  "{hline 78}"
+di as result "  FROZEN reference files (Data/ root) are READ-ONLY  ->  exact paper results."
+di as text   "  Sample reproduction writes only to Data/<source>/ and never overwrites them."
+di as text  "{hline 78}"
+
 * ---- Canonical source inputs consumed by Sample_Creation.do -------------
 if "${mode}" == "reference" {
     global in_mergent "${ref_mergent}"
