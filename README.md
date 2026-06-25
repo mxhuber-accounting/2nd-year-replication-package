@@ -12,21 +12,28 @@ upstream to start**.
 
 ---
 
-## Two ways to reproduce
+## How to reproduce
 
-### Option ii — Paper only (fast, recommended)
-Use the shipped working files and reproduce every figure and table directly.
-1. Open `setup.do`, edit the single `${REPL}` line to point at this folder.
-2. In Stata, **run `setup.do`**, then run `Paper Replication/0_run_paper.do`. *(No `cd` needed — `setup.do` uses absolute paths.)*
+Edit the single `${REPL}` line in `setup.do`, then **run `setup.do`** (it sets every
+path and the sample-creation choice). No `cd` needed — all paths are absolute.
 
-Builds `_master.dta` from the shipped `_WV.dta` (via `Build_Master.do`), then writes
-all output to `Paper Replication/Figures and Tables/`.
+### The one choice: where the sample comes from
+In `setup.do`, set `global mode` to one of:
 
-### Option i — Full reconstruction (slow, from raw vendor data)
-Rebuild every source database from raw, then the sample, then the analysis.
-1. In `setup.do`, set `${REPL}` **and** `global mode "regenerate"`.
-2. **Run `setup.do`**, then `Sample Replication/0_run_sample.do` (several hours),
-   then `Paper Replication/0_run_paper.do`.
+- **`"reference"`** (default, fast) — build the sample from the **FROZEN reference
+  vendor files** in `Data/Reference Files/`. Reproduces the paper.
+- **`"raw"`** (slow, several hours) — **rebuild every vendor database from raw**
+  vendor data first, then build the sample.
+
+### Steps
+1. **`setup.do`** — edit `${REPL}`, pick `${mode}`, run it.
+2. **`Sample Replication/0_run_sample.do`** — builds `Data/Working Files/_WV.dta`
+   (it runs the five source builds first **only** when `mode = "raw"`).
+3. **`Paper Replication/0_run_paper.do`** — builds `_master.dta` from `_WV.dta` and
+   writes every figure and table to `Paper Replication/Figures and Tables/`.
+
+> **Fastest path:** the package ships a prebuilt `_WV.dta`, so to reproduce the paper
+> without rebuilding the sample at all, run `setup.do` then **step 3** — skip step 2.
 
 ---
 
@@ -38,7 +45,7 @@ Data/Reference Files/CDS_2012_2020_GVKEY-CUSIP.dta
 Data/Reference Files/MergentFISD_QuarterlyPanel.dta
 Data/Reference Files/WRDS_Bond_Returns.dta
 ```
-With `mode = reference` (default) the pipeline reads these. `mode = regenerate`
+With `mode = reference` (default) the pipeline reads these. `mode = raw`
 reads the freshly rebuilt source outputs in `Data/<source>/` instead. **Sample
 Replication only ever writes to `Data/<source>/` and `Data/Working Files/` — it
 never targets the four files above.**

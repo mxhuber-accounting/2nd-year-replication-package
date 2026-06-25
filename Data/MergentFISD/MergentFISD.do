@@ -57,6 +57,24 @@ program define process_fisd
     destring offering_amt, replace force
     drop if missing(qoffering)
 
+    *** Bond characteristics carried into the panel (issue-level, constant within
+    *** issuecus). Needed by Sample_Creation for the bond_type / convertible /
+    *** preferred restrictions and for Off_Date / Mat_Date. Merged back before save.
+    preserve
+        capture confirm variable parent_id
+        if !_rc destring parent_id, replace force
+        local charvars issuecus Off_Date Mat_Date
+        foreach c in parent_id bond_type convertible preferred_security ///
+                     preferred_stock_issuance private_placement {
+            capture confirm variable `c'
+            if !_rc local charvars `charvars' `c'
+        }
+        keep `charvars'
+        bysort issuecus: keep if _n == 1
+        tempfile issues_chars
+        save `issues_chars'
+    restore
+
     keep issuecus issuer_cusip qoffering qmat offering_amt
     rename issuer_cusip issuercus
     tempfile issues_clean
@@ -247,6 +265,9 @@ program define process_fisd
         replace `v'change = 0 if `v'_num == 22 | `v'_num[_n-1] == 22
     }
     drop if missing(SPR_num) & missing(MR_num) & missing(FR_num)
+
+    *** Attach the issue-level bond characteristics extracted above
+    merge m:1 issuecus using `issues_chars', keep(master match) nogen
 
     compress
     save "${wf}/MergentFISD_QuarterlyPanel_`sample_tag'.dta", replace

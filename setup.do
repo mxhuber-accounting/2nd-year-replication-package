@@ -25,11 +25,22 @@ global markit    "${data}/Markit"              // Markit CDS panel
 global working   "${data}/Working Files"       // sample outputs: SampleFinalCDS, _WV, _master
 global refdir    "${data}/Reference Files"     // the four FROZEN reference inputs (read-only)
 
-* ====================== REPRODUCTION MODE =================================
-* "reference"  = use the four FROZEN safety files in Data/ root  -> reproduces
-*                the EXACT paper findings. (default)
-* "regenerate" = use the freshly rebuilt source outputs from Sample Replication.
+* ============== CHOOSE THE SAMPLE-CREATION SOURCE (pick one) ==============
+* The ONLY choice the reproducer makes besides ${REPL} above. It controls how
+* "Sample Replication/0_run_sample.do" builds the working sample:
+*
+*   "reference" = build the sample from the FROZEN reference vendor files in
+*                 Data/Reference Files/   (fast; reproduces the paper). DEFAULT.
+*   "raw"       = rebuild every vendor database from raw vendor data first,
+*                 then build the sample (slow, several hours).
+*
+* The paper run (Paper Replication/0_run_paper.do) is identical either way.
 global mode "reference"
+
+if !inlist("${mode}", "reference", "raw") {
+    di as error `"setup.do: global mode must be "reference" or "raw" (got "${mode}")."'
+    exit 198
+}
 
 * ---- FROZEN reference files in Data/Reference Files/ -- DO NOT OVERWRITE --
 * These four reproduce the exact paper results. "1 Sample Replication" writes
@@ -53,7 +64,7 @@ if "${mode}" == "reference" {
     global in_cds     "${ref_cds}"
     global in_wrds    "${ref_wrds}"
 }
-else {
+else {   // "raw" -- freshly rebuilt source outputs from Sample Replication
     global in_mergent "${mergent}/MergentFISD_QuarterlyPanel_2012-2023.dta"
     global in_capiq   "${capiq}/CapitalIQ_Final.dta"
     global in_cds     "${markit}/CDS_2012_2020_GVKEY-CUSIP.dta"

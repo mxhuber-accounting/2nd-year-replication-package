@@ -25,9 +25,11 @@ version 17
 global root "${REPL}"
 global data "${root}/Data/Working Files"
 global out  "${root}/Paper Replication/Figures and Tables/Baseline_Analysis_Extensive"
+global paperfigs "${root}/Paper Replication/Figures and Tables/Tables and Figures in Paper"
 * =====================================
 cap mkdir "${root}/Paper Replication/Figures and Tables"
 cap mkdir "${out}"
+cap mkdir "${paperfigs}"
 
 
 ********************************************************************
