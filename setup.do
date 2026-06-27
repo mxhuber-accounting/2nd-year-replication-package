@@ -15,20 +15,22 @@
 * (1) WHERE — point this at the unzipped replication package on this machine:
 global REPL "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
 
-* (2) WHICH SAMPLE — how Sample Replication/0_run_sample.do builds the sample:
-*       "reference" = from the FROZEN reference vendor files  (fast; reproduces
-*                     the paper sample).  [DEFAULT]
-*       "raw"       = rebuild every vendor database from raw data first, then
-*                     build the sample  (slow, several hours).
-*     The paper run (Paper Replication/0_run_paper.do) is identical either way.
-global mode "reference"
+* (2) WHICH SAMPLE — which working sample the paper run (0_run_paper.do) uses:
+*       "shipped"   = the PREBUILT sample already in Data/Working Files/
+*                     (fast; reproduces the paper).  [DEFAULT]
+*       "reference" = REBUILD the sample from the FROZEN reference vendor files
+*                     -> writes to  Data/Working Files/Rebuilt_reference/
+*       "raw"       = REBUILD every vendor database from raw, then the sample
+*                     -> writes to  Data/Working Files/Rebuilt_raw/   (slow)
+*     Rebuilds go to their OWN subfolder and NEVER overwrite the shipped files.
+global mode "shipped"
 * ===========================================================================
 
-if !inlist("${mode}", "reference", "raw") {
-    di as error `"setup.do: global mode must be "reference" or "raw" (got "${mode}")."'
+if !inlist("${mode}", "shipped", "reference", "raw") {
+    di as error `"setup.do: global mode must be "shipped", "reference", or "raw" (got "${mode}")."'
     exit 198
 }
-di as result _n "  Sample source (mode) = ${mode}    [reference = frozen files | raw = from scratch]" _n
+di as result _n "  Working sample (mode) = ${mode}    [shipped = prebuilt | reference/raw = rebuilt to a subfolder]" _n
 
 * ---- Data root and source databases -------------------------------------
 global data     "${REPL}/Data"
@@ -60,7 +62,8 @@ di as text   "  Sample reproduction writes only to Data/<source>/ and never over
 di as text  "{hline 78}"
 
 * ---- Canonical source inputs consumed by Sample_Creation.do -------------
-if "${mode}" == "reference" {
+* (Only used by a "reference"/"raw" rebuild; "shipped" never runs Sample_Creation.)
+if inlist("${mode}", "shipped", "reference") {
     global in_mergent "${ref_mergent}"
     global in_capiq   "${ref_capiq}"
     global in_cds     "${ref_cds}"
@@ -72,6 +75,16 @@ else {   // "raw" -- freshly rebuilt source outputs from Sample Replication
     global in_cds     "${markit}/CDS_2012_2020_GVKEY-CUSIP.dta"
     global in_wrds    "${wrds}/WRDS_Bond_Returns.dta"
 }
+
+* ---- Working-sample directory (the SAFETY LAYER) ------------------------
+* All of {SampleFinalCDS, _WV, _master} for the chosen sample live in ${wsdir}.
+* "shipped" uses Data/Working Files/ as-is; rebuilds go to a Rebuilt_* subfolder
+* so the prebuilt files are never overwritten.
+if      "${mode}" == "shipped"   global wsdir "${working}"
+else if "${mode}" == "reference" global wsdir "${working}/Rebuilt_reference"
+else                             global wsdir "${working}/Rebuilt_raw"
+cap mkdir "${working}"
+cap mkdir "${wsdir}"
 * =========================================================================
 
 * ---- Output -------------------------------------------------------------

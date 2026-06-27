@@ -42,15 +42,22 @@ version 17
 
 * ---- inputs / outputs (resolved by setup.do) ----
 global comp "${emaxx}"                 // appended eMAXX *_Complete.dta
-global data "${working}"               // sample outputs
+global data "${wsdir}"                 // outputs -> ${wsdir} (Rebuilt_* subfolder for reference/raw; never the shipped files)
 cap mkdir "${data}"
 
 * required globals
-foreach g in emaxx working in_mergent in_wrds in_capiq in_cds {
+foreach g in emaxx working wsdir in_mergent in_wrds in_capiq in_cds {
     if "${`g'}" == "" {
         di as error "Global ${`g'} is empty -- run setup.do (and set ${mode})."
         exit 198
     }
+}
+
+* Safety: a rebuild must never overwrite the shipped Working Files.
+if "${wsdir}" == "${working}" {
+    di as error "Refusing to run: ${wsdir} == Data/Working Files (mode = shipped)."
+    di as error "Sample creation runs only for mode = reference or raw (writes to a Rebuilt_* subfolder)."
+    exit 198
 }
 
 * ---- probe the MergentFISD input for which wanted columns are present ----

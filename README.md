@@ -15,26 +15,30 @@ upstream to start**.
 ## How to reproduce
 
 Open `setup.do` and edit the **two settings in the box at the top** — `${REPL}`
-(where the package lives) and `${mode}` (which sample to build) — then **run
+(where the package lives) and `${mode}` (which working sample to use) — then **run
 `setup.do`**. No `cd` needed — all paths are absolute.
 
-### The one choice: where the sample comes from
-At the top of `setup.do`, set `global mode` to one of:
+### The one choice: which working sample the paper uses
+At the top of `setup.do`, set `global mode` to one of three:
 
-- **`"reference"`** (default, fast) — build the sample from the **FROZEN reference
-  vendor files** in `Data/Reference Files/`. Reproduces the paper.
-- **`"raw"`** (slow, several hours) — **rebuild every vendor database from raw**
-  vendor data first, then build the sample.
+- **`"shipped"`** (default, fast) — use the **prebuilt** sample already in
+  `Data/Working Files/`. Reproduces the paper. *(Nothing to build — skip to step 3.)*
+- **`"reference"`** — **rebuild** the sample from the **frozen reference** vendor files
+  → writes to `Data/Working Files/Rebuilt_reference/`.
+- **`"raw"`** (slow, several hours) — **rebuild every vendor database from raw**, then
+  the sample → writes to `Data/Working Files/Rebuilt_raw/`.
+
+> **Safety layer:** `reference`/`raw` rebuilds write to their own `Rebuilt_*` subfolder and
+> **never overwrite the shipped `_WV.dta` / `SampleFinalCDS.dta`.** The whole pipeline
+> (Build_Master + analysis) then reads from whichever folder `${mode}` selected.
 
 ### Steps
 1. **`setup.do`** — edit `${REPL}`, pick `${mode}`, run it.
-2. **`Sample Replication/0_run_sample.do`** — builds `Data/Working Files/_WV.dta`
-   (it runs the five source builds first **only** when `mode = "raw"`).
-3. **`Paper Replication/0_run_paper.do`** — builds `_master.dta` from `_WV.dta` and
-   writes every figure and table to `Paper Replication/Figures and Tables/`.
-
-> **Fastest path:** the package ships a prebuilt `_WV.dta`, so to reproduce the paper
-> without rebuilding the sample at all, run `setup.do` then **step 3** — skip step 2.
+2. **`Sample Replication/0_run_sample.do`** — *only for `reference`/`raw`* — builds the
+   sample into the `Rebuilt_*` subfolder (runs the five source builds first only for `raw`).
+   For `shipped` there's nothing to build; skip this step.
+3. **`Paper Replication/0_run_paper.do`** — builds `_master.dta` from the chosen `_WV.dta`
+   and writes every figure and table to `Paper Replication/Figures and Tables/`.
 
 ---
 
@@ -84,7 +88,7 @@ Data/                         ← all data; each source folder holds its OWN bui
   CapitalIQ/    (CapitalIQ_DO.do + Raw Data/ + CapitalIQ_Final)
   WRDS Bond Returns/ (WRDS_Bond_Returns.do + Raw Data/)
   Markit/       (CDS Data.do + Raw Data/ + CDS panel)
-  Working Files/   (SampleFinalCDS, _WV, _master)
+  Working Files/   (shipped SampleFinalCDS, _WV, _master; rebuilds -> Rebuilt_reference/ | Rebuilt_raw/)
   Reference Files/ (FROZEN read-only: CapitalIQ_Final, CDS, WRDS_Bond_Returns)
 ```
 

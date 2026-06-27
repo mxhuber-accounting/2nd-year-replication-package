@@ -30,7 +30,10 @@ global rate "${root}/Data/MergentFISD"         // MergentFISD ratings + LSEG out
 global ciq  "${root}/Data/CapitalIQ"           // CapitalIQ outlook/watch
 global wrds "${root}/Data/WRDS Bond Returns"               // WRDS bond yields, amount outstanding, spreads
 global cds  "${root}/Data/Markit"                        // Markit CDS panel (issuer-quarter)
-global data "${root}/Data/Working Files"                  // working files
+* Working-sample directory (set by setup.do: shipped / reference / raw).
+* Falls back to Data/Working Files/ if run standalone without setup.do.
+if "${wsdir}" == "" global wsdir "${root}/Data/Working Files"
+global data "${wsdir}"                  // working files
 * =====================================
 
 

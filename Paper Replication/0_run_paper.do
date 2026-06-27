@@ -21,6 +21,17 @@ if "${REPL}" == "" {
     exit 198
 }
 
+* The paper run reads the working sample chosen in setup.do (${mode}) from ${wsdir}.
+di as text  "{hline 78}"
+di as result "  PAPER RUN   --   working sample: mode = ${mode}   (${wsdir})"
+di as text  "{hline 78}"
+capture confirm file "${wsdir}/eMAXXMergentFISD_SampleFinalCDS_WV.dta"
+if _rc {
+    di as error "No _WV.dta found in ${wsdir}."
+    di as error "For mode = reference or raw, run Sample Replication/0_run_sample.do first."
+    exit 601
+}
+
 global C "${REPL}/Paper Replication/Code"
 
 * Build the estimation master file from the working sample (_WV.dta -> _master.dta)

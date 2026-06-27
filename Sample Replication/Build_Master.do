@@ -17,7 +17,10 @@ version 17
 
 * ============= SET PATHS =============
 global root "${REPL}"
-global data "${root}/Data/Working Files"
+* Working-sample directory (set by setup.do: shipped / reference / raw).
+* Falls back to Data/Working Files/ if run standalone without setup.do.
+if "${wsdir}" == "" global wsdir "${root}/Data/Working Files"
+global data "${wsdir}"
 * =====================================
 
 
