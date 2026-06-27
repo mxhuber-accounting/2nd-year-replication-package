@@ -1,5 +1,7 @@
 ********************************************************************
 *** Merge_Variables.do  --  Reference catalog of optional merges.
+***                          NOT part of the replication pipeline; illustrative only.
+***                          (Filenames in the snippets may be stale examples.)
 ***
 *** This file is NOT meant to be executed top-to-bottom. Every merge
 *** snippet is commented out. To bring an additional variable into a

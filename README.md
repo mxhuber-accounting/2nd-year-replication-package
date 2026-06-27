@@ -68,6 +68,7 @@ reproducer who has run it before — cannot overwrite them; the OS denies the wr
 ```
 setup.do                      ← edit ${REPL} once; defines all paths + the reference/raw choice
 README.md
+VARIABLE_DICTIONARY.md        ← definitions of key constructed variables (audit aid)
 
 Sample Replication/           ← DATA CONSTRUCTION
   0_run_sample.do             ← orchestrator: (raw only) source builds → Sample_Creation
@@ -96,6 +97,31 @@ Data/                         ← all data; each source folder holds its OWN bui
 > **Data on GitHub:** the `Data/` tree is ~100 GB and is *not* committed (it is
 > git-ignored). The repository holds the code, `setup.do`, and docs; the data is
 > distributed separately (Dropbox / institutional access).
+
+---
+
+## Pipeline map
+What each script reads, writes, and in which mode it runs. `${wsdir}` is the
+working-sample folder chosen by `${mode}` (`Data/Working Files/` for `shipped`,
+`…/Rebuilt_reference/` or `…/Rebuilt_raw/` for a rebuild).
+
+| Step | Script | Reads | Writes | Runs in |
+|---|---|---|---|---|
+| 0 | `setup.do` | — | sets `${REPL}`, `${mode}`, `${wsdir}`, all paths | always (first) |
+| 1 | `Sample Replication/0_run_sample.do` | (raw) `Data/<source>/Raw …` | orchestrates 1a + 1b | reference, raw |
+| 1a | `eMAXX_1998-2023.do`, `MergentFISD.do`, `CapitalIQ_DO.do`, `WRDS_Bond_Returns.do`, `CDS Data.do` | raw vendor files | `Data/<source>/*_Complete` / panels | **raw only** |
+| 1b | `Sample Replication/Sample_Creation.do` | `${in_*}` vendor inputs + eMAXX `*_Complete` | `${wsdir}/SampleFinalCDS.dta`, `…_WV.dta` | reference, raw |
+| 2 | `Paper Replication/0_run_paper.do` | `${wsdir}/…_WV.dta` | orchestrates 2a–2e | always |
+| 2a | `Sample Replication/Build_Master.do` | `${wsdir}/…_WV.dta` | `${wsdir}/_master.dta` | always (via paper) |
+| 2b | `Code/1_Descriptives.do` | `${wsdir}/_master.dta` | Descriptive/ → F01, F02, F03, T01, T02 | always |
+| 2c | `Code/2_Baseline_Analysis.do` | `_master.dta` | Baseline_Analysis/ → T03–T07 | always |
+| 2d | `Code/2c_Baseline_Analysis_Extensive.do` | `_master.dta` | Baseline_Analysis_Extensive/ → F04 | always |
+| 2e | `Code/3_Disaggregated_Threshold.do` | `_master.dta` | Threshold/ → F05, F06 | always |
+| 3 | `Investment Management Sample Creation/0_run_im_sample.do` | `${wsdir}/…_WV.dta` + `${emaxx}/PERSONNEL_Complete.dta` | `${wsdir}/…_IM_Sample.dta` | optional, any mode |
+
+In `shipped` mode step 1 builds nothing (the prebuilt sample is used); start at step 2.
+See `VARIABLE_DICTIONARY.md` for the variables these scripts construct, and
+`Paper Replication/README.md` for the internal-vs-paper table/figure numbering.
 
 ---
 
