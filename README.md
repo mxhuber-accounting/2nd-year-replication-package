@@ -14,11 +14,12 @@ upstream to start**.
 
 ## How to reproduce
 
-Edit the single `${REPL}` line in `setup.do`, then **run `setup.do`** (it sets every
-path and the sample-creation choice). No `cd` needed — all paths are absolute.
+Open `setup.do` and edit the **two settings in the box at the top** — `${REPL}`
+(where the package lives) and `${mode}` (which sample to build) — then **run
+`setup.do`**. No `cd` needed — all paths are absolute.
 
 ### The one choice: where the sample comes from
-In `setup.do`, set `global mode` to one of:
+At the top of `setup.do`, set `global mode` to one of:
 
 - **`"reference"`** (default, fast) — build the sample from the **FROZEN reference
   vendor files** in `Data/Reference Files/`. Reproduces the paper.

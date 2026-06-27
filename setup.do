@@ -11,9 +11,24 @@
 ***   file, so paths are defined in exactly one place.
 ********************************************************************************
 
-* ============================ EDIT THIS ONE LINE ============================
+* ========================= EDIT THESE TWO SETTINGS =========================
+* (1) WHERE — point this at the unzipped replication package on this machine:
 global REPL "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias Huber/Replication Package"
+
+* (2) WHICH SAMPLE — how Sample Replication/0_run_sample.do builds the sample:
+*       "reference" = from the FROZEN reference vendor files  (fast; reproduces
+*                     the paper).  [DEFAULT]
+*       "raw"       = rebuild every vendor database from raw data first, then
+*                     build the sample  (slow, several hours).
+*     The paper run (Paper Replication/0_run_paper.do) is identical either way.
+global mode "reference"
 * ===========================================================================
+
+if !inlist("${mode}", "reference", "raw") {
+    di as error `"setup.do: global mode must be "reference" or "raw" (got "${mode}")."'
+    exit 198
+}
+di as result _n "  Sample source (mode) = ${mode}    [reference = frozen files | raw = from scratch]" _n
 
 * ---- Data root and source databases -------------------------------------
 global data     "${REPL}/Data"
@@ -24,23 +39,6 @@ global wrds      "${data}/WRDS Bond Returns"   // WRDS bond yields, amount outst
 global markit    "${data}/Markit"              // Markit CDS panel
 global working   "${data}/Working Files"       // sample outputs: SampleFinalCDS, _WV, _master
 global refdir    "${data}/Reference Files"     // the four FROZEN reference inputs (read-only)
-
-* ============== CHOOSE THE SAMPLE-CREATION SOURCE (pick one) ==============
-* The ONLY choice the reproducer makes besides ${REPL} above. It controls how
-* "Sample Replication/0_run_sample.do" builds the working sample:
-*
-*   "reference" = build the sample from the FROZEN reference vendor files in
-*                 Data/Reference Files/   (fast; reproduces the paper). DEFAULT.
-*   "raw"       = rebuild every vendor database from raw vendor data first,
-*                 then build the sample (slow, several hours).
-*
-* The paper run (Paper Replication/0_run_paper.do) is identical either way.
-global mode "reference"
-
-if !inlist("${mode}", "reference", "raw") {
-    di as error `"setup.do: global mode must be "reference" or "raw" (got "${mode}")."'
-    exit 198
-}
 
 * ---- FROZEN reference inputs -- DO NOT OVERWRITE --
 * These reproduce the exact paper results. Sample creation writes ONLY to
