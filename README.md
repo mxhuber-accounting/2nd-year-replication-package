@@ -14,31 +14,37 @@ upstream to start**.
 
 ## How to reproduce
 
-Open `setup.do` and edit the **two settings in the box at the top** — `${REPL}`
-(where the package lives) and `${mode}` (which working sample to use) — then **run
-`setup.do`**. No `cd` needed — all paths are absolute.
+**Goal:** regenerate every figure and table in the paper. Edit the **two settings
+at the top of `setup.do`** — `${REPL}` (where this package lives on your machine)
+and `${mode}` (how far upstream you want to start) — then **run `setup.do`**. No
+`cd` is needed; every path is absolute.
 
-### The one choice: which working sample the paper uses
-At the top of `setup.do`, set `global mode` to one of three:
+There are **three ways to reproduce the paper**, from fastest to most thorough.
+They are fully independent — each writes to its own location and leaves the others
+(and the shipped files) untouched — so you can run any one of them, or all three,
+without them affecting each other.
 
-- **`"shipped"`** (default, fast) — use the **prebuilt** sample already in
-  `Data/Working Files/`. Reproduces the paper. *(Nothing to build — skip to step 3.)*
-- **`"reference"`** — **rebuild** the sample from the **frozen reference** vendor files
-  → writes to `Data/Working Files/Rebuilt_reference/`.
-- **`"raw"`** (slow, several hours) — **rebuild every vendor database from raw**, then
-  the sample → writes to `Data/Working Files/Rebuilt_raw/`.
+### Step 1 — from the shipped sample · ≈ 20 minutes
+Set `mode = "shipped"` (the default). Uses the prebuilt working sample that already
+ships in `Data/Working Files/` and produces every figure and table in the paper.
+This is the recommended quick reproduction: there is no sample to build, so you
+only run the analysis.
 
-> **Safety layer:** `reference`/`raw` rebuilds write to their own `Rebuilt_*` subfolder and
-> **never overwrite the shipped `_WV.dta` / `SampleFinalCDS.dta`.** The whole pipeline
-> (Build_Master + analysis) then reads from whichever folder `${mode}` selected.
+### Step 2 — from the reference vendor files · ≈ 1–2 hours
+Set `mode = "reference"`. Rebuilds the working sample from the frozen reference
+vendor files, then runs the analysis — confirming that the sample-construction
+code reproduces the shipped sample.
 
-### Steps
-1. **`setup.do`** — edit `${REPL}`, pick `${mode}`, run it.
-2. **`Sample Replication/0_run_sample.do`** — *only for `reference`/`raw`* — builds the
-   sample into the `Rebuilt_*` subfolder (runs the five source builds first only for `raw`).
-   For `shipped` there's nothing to build; skip this step.
-3. **`Paper Replication/0_run_paper.do`** — builds `_master.dta` from the chosen `_WV.dta`
-   and writes every figure and table to `Paper Replication/Figures and Tables/`.
+### Step 3 — from the raw vendor data · several hours
+Set `mode = "raw"`. Rebuilds every vendor database from the raw source files, then
+the working sample, then the analysis — the complete end-to-end reproduction.
+
+### What to run
+1. **`setup.do`** — set `${REPL}` and `${mode}`, then run it.
+2. **`Sample Replication/0_run_sample.do`** — builds the working sample. Needed only
+   for Step 2 / Step 3; for Step 1 (shipped) there is nothing to build, so skip it.
+3. **`Paper Replication/0_run_paper.do`** — writes every figure and table to
+   `Paper Replication/Figures and Tables/`.
 
 ---
 
