@@ -80,6 +80,27 @@ else {   // "raw" -- freshly rebuilt source outputs from Sample Replication
 global figtab    "${REPL}/Paper Replication/Figures and Tables"
 global paperfigs "${figtab}/Tables and Figures in Paper"   // curated, numbered subset used in the paper
 
+* ---- Required user-written commands (installed once, only if missing) -------
+* Each check tests a command that proves the package is present, then installs
+* it if absent. NOTE: egenmore has no eponymous command, so we test its _gnvals
+* helper; reghdfe also pulls in ftools; grc1leg is not on SSC.
+capture which reghdfe
+if _rc ssc install reghdfe, replace
+capture which ftools
+if _rc ssc install ftools, replace
+capture which esttab
+if _rc ssc install estout, replace
+capture which winsor2
+if _rc ssc install winsor2, replace
+capture which _gnvals
+if _rc ssc install egenmore, replace
+capture which distinct
+if _rc ssc install distinct, replace
+capture which unique
+if _rc ssc install unique, replace
+capture which grc1leg
+if _rc net install grc1leg, from("http://www.stata.com/users/vwiggins") replace
+
 * ---- Final Adjustments -------------------------------------------------------
 set more off
 cap mkdir "${working}"

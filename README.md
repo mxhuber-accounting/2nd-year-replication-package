@@ -94,7 +94,10 @@ Data/                         ← all data; each source folder holds its OWN bui
 ---
 
 ## Requirements
-Stata 17+ (tested on StataNow/MP). User-written commands:
+Stata 17+ (tested on StataNow/MP). **`setup.do` auto-installs the required
+user-written commands** on its first run (only the ones that are missing), so no
+manual setup is needed — as long as the machine has internet access. For
+reference (or to pre-install offline), they are:
 ```
 ssc install reghdfe
 ssc install ftools
