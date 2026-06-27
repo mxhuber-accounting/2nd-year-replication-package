@@ -27,3 +27,5 @@ _INTERNAL_DELETE_BEFORE_SUBMISSION/
 *.stswp
 ~*
 *.log
+.Rhistory
+*.Rhistory

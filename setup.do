@@ -17,7 +17,7 @@ global REPL "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias
 
 * (2) WHICH SAMPLE — how Sample Replication/0_run_sample.do builds the sample:
 *       "reference" = from the FROZEN reference vendor files  (fast; reproduces
-*                     the paper).  [DEFAULT]
+*                     the paper sample).  [DEFAULT]
 *       "raw"       = rebuild every vendor database from raw data first, then
 *                     build the sample  (slow, several hours).
 *     The paper run (Paper Replication/0_run_paper.do) is identical either way.
