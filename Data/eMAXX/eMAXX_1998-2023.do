@@ -247,6 +247,30 @@ save "${outdir}/ISSUERS_Complete.dta", replace
 **********************************************************************
 {
 
+*  3a) Import each personnel .txt -> per-period .dta (mirrors the FIRM/FUND/etc.
+*      blocks above: add qdate from the period and normalize id types). Each
+*      import is guarded with `confirm file`, so quarters that have no personnel
+*      file are skipped instead of erroring.
+forvalues y = 1999/2023 {
+    forvalues q = 1/4 {
+        local period "`y'Q`q'"
+        foreach f in PER_JOB PER_DATA PER_FUND {
+            capture confirm file "${root}/ASCII_NAEur_Mkt_All_Pipe_RN_`period'/`f'.txt"
+            if _rc continue
+            import delimited "${root}/ASCII_NAEur_Mkt_All_Pipe_RN_`period'/`f'.txt", clear
+            capture confirm string variable firmid
+            if !_rc destring firmid, replace
+            capture confirm string variable fundid
+            if !_rc destring fundid, replace
+            gen qdate = yq(`y', `q')
+            format qdate %tq
+            compress
+            save "${root}/ASCII_NAEur_Mkt_All_Pipe_RN_`period'/`f'.dta", replace
+        }
+    }
+}
+
+*  3b) Append each personnel file across quarters into one dataset
 use "${root}/ASCII_NAEur_Mkt_All_Pipe_RN_1999Q1/PER_JOB.dta", clear
 
 forvalues y = 1999/2023 {
@@ -281,7 +305,7 @@ compress
 save "${outdir}/PER_DATA.dta", replace
 
 
-use "${outdir}/ASCII_NAEur_Mkt_All_Pipe_RN_1999Q1/PER_FUND.dta", clear
+use "${root}/ASCII_NAEur_Mkt_All_Pipe_RN_1999Q1/PER_FUND.dta", clear
 
 forvalues y = 1999/2023 {
     forvalues q = 1/4 {
@@ -300,7 +324,7 @@ save "${outdir}/PER_FUND.dta", replace
 // Merge Personnel Data
 
 use "${outdir}/PER_JOB.dta", clear
-merge n:1 empid qdate using "${root}/PER_DATA.dta", nogen
+merge n:1 empid qdate using "${outdir}/PER_DATA.dta", nogen
 
 duplicates drop empid qdate firmid, force // Duplicates arise from managing multiple geo or firm codes, as there are no description files explaining the codes this data is dropped
 duplicates report empid qdate firmid

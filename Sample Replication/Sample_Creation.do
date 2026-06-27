@@ -86,6 +86,14 @@ use "${comp}/HOLDING_Complete.dta", clear
 
 keep if regexm(issuecus, "^[A-Za-z0-9]+$")               // identifiable CUSIPs only
 drop if firmid == "CO-MANAGED"
+
+* Sample window: 2012q1 onwards. Applied UP FRONT (before the dedup + merges
+* below) purely for speed -- nothing above this point is cross-quarter, and
+* entry/exit and delta_holdings are built downstream of it either way, so the
+* result is identical to applying it in Step 10; it just spares the heavy steps
+* ~12 years of holdings.
+drop if qdate < tq(2012q1)
+
 * Keep one row per bond x fund x firm x quarter (the earliest qreport).
 * gtools hashsort is hash-based + multithreaded -> far faster and far lower peak
 * memory than a stable `bysort (qreport)` on this tens-of-millions-of-row panel
@@ -231,8 +239,7 @@ save "${data}/eMAXXMergentFISD_SampleFinalCDS.dta", replace
 *** Step 10 -- Sample restrictions
 ********************************************************************
 
-* Sample window: 2012q1 onwards
-drop if qdate < tq(2012q1)
+* Sample window (2012q1 onwards) is applied up front in Step 1 for efficiency.
 
 * Drop bonds without any S&P / Moody's / Fitch rating
 drop if (missing(SPR_num) | SPR_num == 0)  ///
