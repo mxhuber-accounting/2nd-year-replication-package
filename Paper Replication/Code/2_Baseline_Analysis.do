@@ -96,7 +96,7 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("TABLE 1."), bold
+putdocx text ("TABLE 3."), bold
 putdocx paragraph, halign(center)
 putdocx text ("Trading Around Credit Rating Downgrades -- Baseline by Investor Type."), bold
 
@@ -293,7 +293,7 @@ putdocx clear
 putdocx begin, pagesize(A4) landscape margin(all, 0.7in)
 
 putdocx paragraph, halign(center)
-putdocx text ("TABLE 2."), bold
+putdocx text ("TABLE 4."), bold
 putdocx paragraph, halign(center)
 putdocx text ("Life Insurer Delta Holdings around Credit Rating Downgrades -- Progressive FE and Controls."), bold
 
@@ -976,7 +976,7 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("TABLE 6."), bold
+putdocx text ("TABLE 5."), bold
 putdocx paragraph, halign(center)
 putdocx text ("Anticipation Channel -- Prior Outlook Deterioration (Triple Interaction)."), bold
 
@@ -1164,7 +1164,7 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("TABLE 7."), bold
+putdocx text ("TABLE 6."), bold
 putdocx paragraph, halign(center)
 putdocx text ("CDS Coverage Triple Interaction."), bold
 

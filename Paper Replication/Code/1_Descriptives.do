@@ -688,7 +688,7 @@ putdocx clear
 putdocx begin, pagesize(A4) margin(all, 0.8in)
 
 putdocx paragraph, halign(center)
-putdocx text ("TABLE 4."), bold
+putdocx text ("TABLE 2."), bold
 putdocx paragraph, halign(center)
 putdocx text ("Descriptive Statistics."), bold
 putdocx paragraph, halign(both)
