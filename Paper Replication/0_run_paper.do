@@ -41,7 +41,7 @@ do "${C}/1_Descriptives.do"
 do "${C}/2_Baseline_Analysis.do"
 do "${C}/2c_Baseline_Analysis_Extensive.do"
 do "${C}/3_Disaggregated_Threshold.do"
-// do "${C}/Baseline_Analysis_Extensive_UPGRADE.do" // not necessary
+// do "${C}/Robustness/Baseline_Analysis_Extensive_UPGRADE.do" // not necessary
 // do "${C}/Robustness/Downgrade vs. Upgrade.do" // not necessary
 
 di as result "Paper replication complete. See Paper Replication/Figures and Tables/."

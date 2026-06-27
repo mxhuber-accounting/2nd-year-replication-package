@@ -50,11 +50,12 @@ Data/Reference Files/CDS_2012_2020_GVKEY-CUSIP.dta
 Data/Reference Files/WRDS_Bond_Returns.dta
 Data/MergentFISD/Paper Reference File/FINALIssueRatings.dta   ← rich MergentFISD panel (+ its build .do)
 ```
-With `mode = reference` (default) the pipeline reads these. `mode = raw`
-reads the freshly rebuilt source outputs in `Data/<source>/` instead (for
-MergentFISD, `MergentFISD_QuarterlyPanel_2012-2023.dta`). **Sample
-Replication only ever writes to `Data/<source>/` and `Data/Working Files/` — it
-never targets the files above.**
+With `mode = reference` the pipeline reads these; `mode = raw` reads the freshly
+rebuilt source outputs in `Data/<source>/` instead (for MergentFISD,
+`MergentFISD_QuarterlyPanel_2012-2023.dta`). The default `mode = shipped` reads
+neither — it uses the prebuilt working sample directly. **Sample Replication
+only ever writes to `Data/<source>/` and `Data/Working Files/` — it never
+targets the files above.**
 
 **Enforced:** the files are shipped **read-only**, and `setup.do` re-asserts
 the read-only lock on every run. So even a full sample reproduction — or a
@@ -107,6 +108,7 @@ reference (or to pre-install offline), they are:
 ssc install reghdfe
 ssc install ftools
 ssc install estout
+ssc install coefplot
 ssc install winsor2
 ssc install egenmore
 ssc install distinct

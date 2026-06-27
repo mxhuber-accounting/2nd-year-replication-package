@@ -86,7 +86,14 @@ use "${comp}/HOLDING_Complete.dta", clear
 
 keep if regexm(issuecus, "^[A-Za-z0-9]+$")               // identifiable CUSIPs only
 drop if firmid == "CO-MANAGED"
-bysort issuecus fundid firmid qdate (qreport): keep if _n == 1
+* Keep one row per bond x fund x firm x quarter (the earliest qreport).
+* gtools hashsort is hash-based + multithreaded -> far faster and far lower peak
+* memory than a stable `bysort (qreport)` on this tens-of-millions-of-row panel
+* (the native form can exhaust RAM here -> r(909)). hashsort leaves the data
+* marked sorted, so the following `by` does not re-sort. Results are identical.
+* Native equivalent: bysort issuecus fundid firmid qdate (qreport): keep if _n==1
+hashsort issuecus fundid firmid qdate qreport
+by issuecus fundid firmid qdate: keep if _n == 1
 
 * Restrict to corporate market via SECMAST
 merge m:1 issuecus qdate using "${comp}/SECMAST_Complete.dta", ///

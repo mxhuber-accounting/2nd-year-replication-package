@@ -99,8 +99,12 @@ capture which reghdfe
 if _rc ssc install reghdfe, replace
 capture which ftools
 if _rc ssc install ftools, replace
+capture which hashsort
+if _rc ssc install gtools, replace
 capture which esttab
 if _rc ssc install estout, replace
+capture which coefplot
+if _rc ssc install coefplot, replace
 capture which winsor2
 if _rc ssc install winsor2, replace
 capture which _gnvals

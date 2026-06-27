@@ -1,11 +1,11 @@
 ********************************************************************
 *** 2_Baseline_Analysis.do
 ***
-*** Input:  ${data}/_master.dta  (built by 0_Build_Master.do)
+*** Input:  ${data}/_master.dta  (built by Build_Master.do)
 *** Output: ${out}/tableN_*.docx   (no subfolder prefix)
 ***
 *** Main outcome: delta_holdings (bp of offering amount, winsorized 1/99
-*** by fundtype). Built in 0_0_Sample_Creation.do.
+*** by fundtype). Built in Sample_Creation.do.
 ***
 *** Event clock: first downgrade by any agency (S&P, Moody's, Fitch)
 ***

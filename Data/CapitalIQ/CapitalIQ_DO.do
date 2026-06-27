@@ -2,7 +2,7 @@
 *** Builds Data/CapitalIQ/CapitalIQ_Final.dta from raw inputs in Raw Data/:
 ***   - KeyDevelopment Screening Report-*.xls  (S&P CapitalIQ rating events)
 ***   - CIQ-CUSIP.csv                          (WRDS CapitalIQ->CUSIP/GVKEY crosswalk)
-*** Produces the outlook/watch panel consumed by 0_0_Sample_Creation.do (Step 4).
+*** Produces the outlook/watch panel consumed by Sample_Creation.do (Step 4).
 *** Output is written to THIS folder (Data/CapitalIQ/), NOT the Data/ root copy.
 ********************************************************************************
 

@@ -439,7 +439,7 @@ save "${wf}/MergentFISD_IssuesLookup.dta", replace
 *** NOTE
 ********************************************************************************
 * This build keeps ALL bonds. Bond-type / convertible / preferred restrictions
-* are applied downstream in 0_0_Sample_Creation.do (Step 9), by merging the
+* are applied downstream in Sample_Creation.do (Step 9), by merging the
 * characteristics from MergentFISD_IssuesLookup.dta onto the rating panel.
 
 

@@ -28,7 +28,7 @@ use "${data}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
 
 * ------------------------------------------------------------------
 * Sanity check: confirm the new sample-creation variables flowed through.
-* If you see an error here, re-run 0_0_Sample_Creation.do.
+* If you see an error here, re-run Sample_Creation.do.
 * ------------------------------------------------------------------
 foreach v in delta_holdings pos_delta_holdings neg_delta_holdings ttm {
     cap confirm variable `v'

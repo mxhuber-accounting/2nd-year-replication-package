@@ -9,7 +9,7 @@
 ***
 *** Main outcome: delta_holdings (bp of offering, winsorized 1/99 by fundtype).
 *** delta_holdings, pos_delta_holdings, neg_delta_holdings are built and
-*** winsorized in 0_0_Sample_Creation.do and flow through unchanged here.
+*** winsorized in Sample_Creation.do and flow through unchanged here.
 ********************************************************************
 
 clear all

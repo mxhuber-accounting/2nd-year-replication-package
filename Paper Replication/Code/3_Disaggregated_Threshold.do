@@ -31,7 +31,7 @@ use "${data}/_master.dta", clear
 foreach v in fa first_fa naic_bucket Clean_Window {
     cap confirm variable `v'
     if _rc {
-        di as err "Variable '`v'' not found in _master.dta -- check 0_Build_Master.do."
+        di as err "Variable '`v'' not found in _master.dta -- check Build_Master.do."
         exit 111
     }
 }
@@ -554,7 +554,7 @@ use "${data}/_master.dta", clear
 foreach v in fa first_fa naic_bucket Clean_Window net_change_bp {
     cap confirm variable `v'
     if _rc {
-        di as err "Variable '`v'' not found in _master.dta -- check 0_Build_Master.do."
+        di as err "Variable '`v'' not found in _master.dta -- check Build_Master.do."
         exit 111
     }
 }

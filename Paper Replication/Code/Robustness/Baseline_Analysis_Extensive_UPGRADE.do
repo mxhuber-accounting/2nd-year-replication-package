@@ -1,7 +1,7 @@
 ********************************************************************
 *** 2c_upgrade. Baseline Analysis -- Extensive margin (UPGRADES)
 ***
-*** Input:  ${data}/_master.dta  (built by 0_Build_Master.do)
+*** Input:  ${data}/_master.dta  (built by Build_Master.do)
 *** Outputs (all in ${out}):
 ***   Figure_extensive_descriptive_up.png  (LI vs PMF flow lines, side by side)
 ***   Figure_entry_exit_descriptive_up.png

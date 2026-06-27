@@ -1,7 +1,7 @@
 ********************************************************************
 *** 2c. Baseline Analysis -- Extensive margin (net_change_bp, entry, exit)
 ***
-*** Input:  ${data}/_master.dta  (built by 0_Build_Master.do)
+*** Input:  ${data}/_master.dta  (built by Build_Master.do)
 *** Output: ${out}/Figure_extensive_descriptive.png
 ***         ${out}/Table4_extensive_baseline.docx        (LI x window, headline)
 ***         ${out}/Table5_extensive_FE.docx              (progressive FE)
