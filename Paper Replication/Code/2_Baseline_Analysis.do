@@ -1506,169 +1506,6 @@ putdocx save "${out}/table8_external_mgr_triple_unbal_bal.docx", replace
 
 
 ********************************************************************
-*** TABLE 9 -- DV robustness: net_change_bp / delta_holdings_d ($) / share
-***   Same LI x window spec across alternative outcome variables.
-********************************************************************
-
-use "${data}/_master.dta", clear
-build_event_clock, eventvar("DowngradeAny")
-keep if inlist(fundtype_det_num, 1, 5)
-
-gen byte LI = (fundtype_det_num == 1)
-label variable LI "Life Insurer"
-
-* Alternative DVs (Table 9 only)
-cap drop delta_holdings_d holdings_share
-sort issueID fundid firmid qdate
-bysort issueID fundid firmid (qdate): gen delta_holdings_d = paramt - paramt[_n-1]
-label variable delta_holdings_d "Change in dollar holdings (paramt - L.paramt)"
-gen holdings_share = (paramt / amount_outstanding) * 10000
-label variable holdings_share "Holdings share (bp of Amount Outstanding)"
-
-estimates clear
-
-reghdfe net_change_bp ib(1).window##ib(0).LI ///
-    if Clean_Window == 1, absorb(issueID##qdate) cluster(issuerID)
-estimates store t9_netchange
-
-reghdfe delta_holdings_d ib(1).window##ib(0).LI ///
-    if Clean_Window == 1, absorb(issueID##qdate) cluster(issuerID)
-estimates store t9_deltad
-
-reghdfe holdings_share ib(1).window##ib(0).LI ///
-    if Clean_Window == 1, absorb(issueID##qdate) cluster(issuerID)
-estimates store t9_share
-
-{
-local models    "t9_netchange t9_deltad t9_share"
-local mod_labs  `" "Net Change (bp)" "Delta Holdings ($)" "Share (bp)" "'
-local n_models  = 3
-
-local windows   "2 3 4 5"
-local win_labs  `" "Pre_1Y x Life Insurer" "Downgrade x Life Insurer" "Post_1Y x Life Insurer" "Post_2Y x Life Insurer" "'
-local n_wins    = 4
-
-local total_rows = 2 + 2*`n_wins' + 4
-local total_cols = `n_models' + 1
-
-putdocx clear
-putdocx begin
-
-putdocx paragraph, halign(center)
-putdocx text ("TABLE 9."), bold
-putdocx paragraph, halign(center)
-putdocx text ("Robustness -- Alternative Dependent Variables."), bold
-
-putdocx paragraph, halign(both)
-putdocx text ("This table reports robustness checks for the Life Insurer differential around credit rating downgrades using alternative dependent variables. The event clock is centered on the first downgrade by any rating agency. Each column estimates the same Life Insurer x event-window specification with a different outcome: (1) the eMAXX-reconciled net change in holdings in basis points of amount outstanding (winsorized 1/99 by fundtype); (2) change in dollar holdings (paramt - paramt[_n-1]); (3) holdings share, defined as paramt divided by amount outstanding, in basis points. Cells report the Life Insurer differential relative to Passive Mutual Funds in each event window, relative to the Pre_2Y baseline. Sample restricted to Life Insurers and Passive MFs. All specifications include issue x quarter fixed effects. Standard errors clustered by issuer in parentheses. *, **, and *** denote statistical significance at the 10%, 5%, and 1% levels, respectively.")
-
-putdocx paragraph
-
-putdocx table tbl = (`total_rows', `total_cols'), border(all, nil)
-
-putdocx table tbl(1,1) = (""), bold halign(left)
-putdocx table tbl(1,2) = ("Dependent Variable"), bold halign(center)
-putdocx table tbl(1,2), colspan(`n_models')
-putdocx table tbl(1,.), border(top, single)
-
-putdocx table tbl(2,1) = ("Event Window"), bold halign(left)
-forvalues j = 1/`n_models' {
-    local mlab : word `j' of `mod_labs'
-    local col  = `j' + 1
-    putdocx table tbl(2,`col') = ("`mlab'"), bold halign(right)
-}
-putdocx table tbl(2,.), border(bottom, single)
-
-local r = 3
-
-forvalues i = 1/`n_wins' {
-    local wv   : word `i' of `windows'
-    local wlab : word `i' of `win_labs'
-
-    putdocx table tbl(`r',1) = ("`wlab'"), halign(left)
-    forvalues j = 1/`n_models' {
-        local m   : word `j' of `models'
-        local col = `j' + 1
-        qui estimates restore `m'
-        local b = .
-        local se = .
-        capture local b  = _b[`wv'.window#1.LI]
-        capture local se = _se[`wv'.window#1.LI]
-        if missing(`b') {
-            putdocx table tbl(`r',`col') = ("--"), halign(right)
-        }
-        else {
-            local p = 2*ttail(e(df_r), abs(`b'/`se'))
-            local stars ""
-            if `p' < 0.01      local stars "***"
-            else if `p' < 0.05 local stars "**"
-            else if `p' < 0.10 local stars "*"
-            putdocx table tbl(`r',`col') = (string(`b', "%12.3fc") + "`stars'"), halign(right)
-        }
-    }
-    local ++r
-
-    putdocx table tbl(`r',1) = (""), halign(left)
-    forvalues j = 1/`n_models' {
-        local m   : word `j' of `models'
-        local col = `j' + 1
-        qui estimates restore `m'
-        local se = .
-        capture local se = _se[`wv'.window#1.LI]
-        if missing(`se') {
-            putdocx table tbl(`r',`col') = (""), halign(right)
-        }
-        else {
-            putdocx table tbl(`r',`col') = ("(" + string(`se', "%12.3fc") + ")"), halign(right)
-        }
-    }
-    local ++r
-}
-
-local last_coef = `r' - 1
-putdocx table tbl(`last_coef',.), border(bottom, single)
-
-putdocx table tbl(`r',1) = ("Issue x Quarter FE"), halign(left)
-forvalues j = 1/`n_models' {
-    local col = `j' + 1
-    putdocx table tbl(`r',`col') = ("Yes"), halign(right)
-}
-local ++r
-
-putdocx table tbl(`r',1) = ("Observations"), halign(left)
-forvalues j = 1/`n_models' {
-    local m   : word `j' of `models'
-    local col = `j' + 1
-    qui estimates restore `m'
-    putdocx table tbl(`r',`col') = ("`: display %12.0fc e(N)'"), halign(right)
-}
-local ++r
-
-putdocx table tbl(`r',1) = ("R-squared"), halign(left)
-forvalues j = 1/`n_models' {
-    local m   : word `j' of `models'
-    local col = `j' + 1
-    qui estimates restore `m'
-    putdocx table tbl(`r',`col') = ("`: display %12.3fc e(r2)'"), halign(right)
-}
-local ++r
-
-putdocx table tbl(`r',1) = ("Clusters (Issuers)"), halign(left)
-forvalues j = 1/`n_models' {
-    local m   : word `j' of `models'
-    local col = `j' + 1
-    qui estimates restore `m'
-    putdocx table tbl(`r',`col') = ("`: display %12.0fc e(N_clust)'"), halign(right)
-}
-putdocx table tbl(`r',.), border(bottom, single)
-
-putdocx save "${out}/table9_robustness_DV.docx", replace
-copy "${out}/table9_robustness_DV.docx" "${paperfigs}/T07_Table7_PLACEHOLDER to swap.docx", replace   // paper-folder copy
-}
-
-
-
-********************************************************************
 *** FIGURE -- Quarter-by-quarter LI vs PMF differential coefficient
 ***  Two panels: baseline t = -1 (left) and baseline t = -5 (right)
 ********************************************************************
@@ -1739,6 +1576,179 @@ graph export "${out}/FigureES_LI_quarter_by_quarter.png", replace width(2400)
 graph display
 
 
+
+********************************************************************
+*** TABLE 7 -- Trading flows around downgrades: Life Insurers vs Passive MFs
+***   Outcomes: net_change_bp (Net Change), gross_sells_bp (Gross Sells),
+***   gross_buys_bp (Gross Buys). ib(1).window##ib(1).PassiveInvestor on the
+***   {Life Insurer, Passive MF} sample; reports the Life Insurer x window
+***   interaction (#2.PassiveInvestor), Passive MF = omitted, Pre_2Y = omitted
+***   window. Unbalanced (Clean_Window) and Balanced (all 17 quarters) per outcome.
+********************************************************************
+
+use "${data}/_master.dta", clear
+build_event_clock, eventvar("DowngradeAny")
+
+bysort issueID rel_time: gen _tag = (_n == 1)
+bysort issueID: egen _nq = total(_tag)
+gen byte bond_balanced = (_nq == 17)
+drop _tag _nq
+
+keep if inlist(fundtype_det_num, 1, 5)
+
+estimates clear
+
+foreach pair in "net_change_bp nc" "gross_sells_bp gs" "gross_buys_bp gb" {
+    local y   : word 1 of `pair'
+    local tag : word 2 of `pair'
+    reghdfe `y' ib(1).window##ib(1).PassiveInvestor ///
+        if Clean_Window == 1, absorb(issueID##qdate) cluster(issuerID)
+    estimates store t7_`tag'_unbal
+    reghdfe `y' ib(1).window##ib(1).PassiveInvestor ///
+        if Clean_Window == 1 & bond_balanced == 1, ///
+        absorb(issueID##qdate) cluster(issuerID)
+    estimates store t7_`tag'_bal
+}
+
+{
+local models   "t7_nc_unbal t7_nc_bal t7_gs_unbal t7_gs_bal t7_gb_unbal t7_gb_bal"
+local samples  `" "Unbal." "Bal." "Unbal." "Bal." "Unbal." "Bal." "'
+local n_models = 6
+
+local windows  "2 3 4 5"
+local win_labs `" "Pre_1Y x LI" "Downgrade x LI" "Post_1Y x LI" "Post_2Y x LI" "'
+local n_wins   = 4
+
+local total_rows = 3 + 2*`n_wins' + 4
+local total_cols = `n_models' + 1
+
+putdocx clear
+putdocx begin
+
+putdocx paragraph, halign(center)
+putdocx text ("TABLE 7"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Trading Flows Around Downgrades -- Life Insurers vs Passive MFs."), bold
+
+putdocx paragraph, halign(both)
+putdocx text ("This table reports event-window coefficients of three flow outcomes -- Net Change, Gross Sells, and Gross Buys, all in basis points of offering amount -- on the interaction of event-window indicators with a Life Insurer dummy. Flows are defined over the full bond-fund-quarter panel. For each outcome, columns report the regression on the unbalanced sample (Clean Window equal to 1) and on the balanced sample (bonds observed in all 17 event-time quarters). The omitted reference group is Passive Mutual Funds and the omitted window is Pre_2Y (relative time -8 to -5). Pre_1Y covers relative time -4 to -1, Downgrade is relative time 0, Post_1Y covers 1 to 4, and Post_2Y covers 5 to 8. Fixed effects are issue-by-quarter. Standard errors clustered by issuer in parentheses. *, **, and *** denote statistical significance at the 10%, 5%, and 1% levels, respectively.")
+
+putdocx paragraph
+
+putdocx table tbl = (`total_rows', `total_cols'), border(all, nil)
+
+* Row 1 -- outcome group headers (each spanning its Unbal./Bal. pair)
+putdocx table tbl(1,1) = (""), bold halign(left)
+putdocx table tbl(1,2) = ("Net Change"),  bold halign(center)
+putdocx table tbl(1,4) = ("Gross Sells"), bold halign(center)
+putdocx table tbl(1,6) = ("Gross Buys"),  bold halign(center)
+putdocx table tbl(1,6), colspan(2)
+putdocx table tbl(1,4), colspan(2)
+putdocx table tbl(1,2), colspan(2)
+putdocx table tbl(1,.), border(top, single)
+
+* Row 2 -- Unbal./Bal. subheaders
+putdocx table tbl(2,1) = (""), halign(left)
+forvalues j = 1/`n_models' {
+    local slab : word `j' of `samples'
+    local col  = `j' + 1
+    putdocx table tbl(2,`col') = ("`slab'"), bold halign(right)
+}
+
+* Row 3 -- column numbers + row-stub header
+putdocx table tbl(3,1) = ("Window x Life Insurer"), bold halign(left)
+forvalues j = 1/`n_models' {
+    local col = `j' + 1
+    putdocx table tbl(3,`col') = ("(`j')"), bold halign(right)
+}
+putdocx table tbl(3,.), border(bottom, single)
+
+local r = 4
+
+forvalues i = 1/`n_wins' {
+    local wv   : word `i' of `windows'
+    local wlab : word `i' of `win_labs'
+
+    putdocx table tbl(`r',1) = ("`wlab'"), halign(left)
+    forvalues j = 1/`n_models' {
+        local m   : word `j' of `models'
+        local col = `j' + 1
+        qui estimates restore `m'
+        local b  = .
+        local se = .
+        capture local b  = _b[`wv'.window#2.PassiveInvestor]
+        capture local se = _se[`wv'.window#2.PassiveInvestor]
+        if missing(`b') {
+            putdocx table tbl(`r',`col') = ("--"), halign(right)
+        }
+        else {
+            local p = 2*ttail(e(df_r), abs(`b'/`se'))
+            local stars ""
+            if `p' < 0.01      local stars "***"
+            else if `p' < 0.05 local stars "**"
+            else if `p' < 0.10 local stars "*"
+            putdocx table tbl(`r',`col') = (string(`b', "%12.3fc") + "`stars'"), halign(right)
+        }
+    }
+    local ++r
+
+    putdocx table tbl(`r',1) = (""), halign(left)
+    forvalues j = 1/`n_models' {
+        local m   : word `j' of `models'
+        local col = `j' + 1
+        qui estimates restore `m'
+        local se = .
+        capture local se = _se[`wv'.window#2.PassiveInvestor]
+        if missing(`se') {
+            putdocx table tbl(`r',`col') = (""), halign(right)
+        }
+        else {
+            putdocx table tbl(`r',`col') = ("(" + string(`se', "%12.3fc") + ")"), halign(right)
+        }
+    }
+    local ++r
+}
+
+local last_coef = `r' - 1
+putdocx table tbl(`last_coef',.), border(bottom, single)
+
+putdocx table tbl(`r',1) = ("Issue x Quarter FE"), halign(left)
+forvalues j = 1/`n_models' {
+    local col = `j' + 1
+    putdocx table tbl(`r',`col') = ("Yes"), halign(right)
+}
+local ++r
+
+putdocx table tbl(`r',1) = ("Observations"), halign(left)
+forvalues j = 1/`n_models' {
+    local m   : word `j' of `models'
+    local col = `j' + 1
+    qui estimates restore `m'
+    putdocx table tbl(`r',`col') = ("`: display %12.0fc e(N)'"), halign(right)
+}
+local ++r
+
+putdocx table tbl(`r',1) = ("R-squared"), halign(left)
+forvalues j = 1/`n_models' {
+    local m   : word `j' of `models'
+    local col = `j' + 1
+    qui estimates restore `m'
+    putdocx table tbl(`r',`col') = ("`: display %12.3fc e(r2)'"), halign(right)
+}
+local ++r
+
+putdocx table tbl(`r',1) = ("Clusters (Issuers)"), halign(left)
+forvalues j = 1/`n_models' {
+    local m   : word `j' of `models'
+    local col = `j' + 1
+    qui estimates restore `m'
+    putdocx table tbl(`r',`col') = ("`: display %12.0fc e(N_clust)'"), halign(right)
+}
+putdocx table tbl(`r',.), border(bottom, single)
+
+putdocx save "${out}/table7_tradingflows_LI_vs_PMF.docx", replace
+copy "${out}/table7_tradingflows_LI_vs_PMF.docx" "${paperfigs}/T07_Table7_Trading Flows Around Downgrades.docx", replace   // paper-folder copy
+}
 
 
 ********************************************************************
