@@ -42,10 +42,14 @@ if !inlist("${mode}", "reference", "raw") {
     exit 198
 }
 
-* ---- FROZEN reference files in Data/Reference Files/ -- DO NOT OVERWRITE --
-* These four reproduce the exact paper results. "1 Sample Replication" writes
-* ONLY to Data/<source>/ and Working Files/ -- it never touches these.
-global ref_mergent "${refdir}/MergentFISD_QuarterlyPanel.dta"
+* ---- FROZEN reference inputs -- DO NOT OVERWRITE --
+* These reproduce the exact paper results. Sample creation writes ONLY to
+* Data/<source>/ and Working Files/ -- it never touches these.
+*   MergentFISD reference = the rich FINALIssueRatings panel (ratings + bond
+*   characteristics), kept with its build script in
+*   Data/MergentFISD/Paper Reference File/.  The other three are in
+*   Data/Reference Files/.
+global ref_mergent "${mergent}/Paper Reference File/FINALIssueRatings.dta"
 global ref_capiq   "${refdir}/CapitalIQ_Final.dta"
 global ref_cds     "${refdir}/CDS_2012_2020_GVKEY-CUSIP.dta"
 global ref_wrds    "${refdir}/WRDS_Bond_Returns.dta"
@@ -53,7 +57,7 @@ global ref_wrds    "${refdir}/WRDS_Bond_Returns.dta"
 * Enforce read-only on the four reference files 
 cap shell chmod 444 "${ref_mergent}" "${ref_capiq}" "${ref_cds}" "${ref_wrds}"
 di as text  "{hline 78}"
-di as result "  FROZEN reference files (Data/Reference Files/) are READ-ONLY -> exact paper results."
+di as result "  FROZEN reference inputs are READ-ONLY -> exact paper results."
 di as text   "  Sample reproduction writes only to Data/<source>/ and never overwrites them."
 di as text  "{hline 78}"
 

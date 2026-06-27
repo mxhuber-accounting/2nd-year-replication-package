@@ -37,20 +37,21 @@ In `setup.do`, set `global mode` to one of:
 
 ---
 
-## The four FROZEN reference files — do not overwrite
-These live in `Data/Reference Files/` and reproduce the **exact** paper findings:
+## The FROZEN reference inputs — do not overwrite
+These reproduce the **exact** paper findings:
 ```
 Data/Reference Files/CapitalIQ_Final.dta
 Data/Reference Files/CDS_2012_2020_GVKEY-CUSIP.dta
-Data/Reference Files/MergentFISD_QuarterlyPanel.dta
 Data/Reference Files/WRDS_Bond_Returns.dta
+Data/MergentFISD/Paper Reference File/FINALIssueRatings.dta   ← rich MergentFISD panel (+ its build .do)
 ```
 With `mode = reference` (default) the pipeline reads these. `mode = raw`
-reads the freshly rebuilt source outputs in `Data/<source>/` instead. **Sample
+reads the freshly rebuilt source outputs in `Data/<source>/` instead (for
+MergentFISD, `MergentFISD_QuarterlyPanel_2012-2023.dta`). **Sample
 Replication only ever writes to `Data/<source>/` and `Data/Working Files/` — it
-never targets the four files above.**
+never targets the files above.**
 
-**Enforced:** the four files are shipped **read-only**, and `setup.do` re-asserts
+**Enforced:** the files are shipped **read-only**, and `setup.do` re-asserts
 the read-only lock on every run. So even a full sample reproduction — or a
 reproducer who has run it before — cannot overwrite them; the OS denies the write.
 (To deliberately refresh one, `chmod u+w` it first.)
@@ -59,28 +60,31 @@ reproducer who has run it before — cannot overwrite them; the OS denies the wr
 
 ## Structure
 ```
-setup.do                      ← edit ${REPL} once; defines all paths + the mode switch
+setup.do                      ← edit ${REPL} once; defines all paths + the reference/raw choice
 README.md
 
-Sample Replication/           ← DATA CONSTRUCTION (Option i)
-  0_run_sample.do             ← orchestrator: source builds → sample → master
+Sample Replication/           ← DATA CONSTRUCTION
+  0_run_sample.do             ← orchestrator: (raw only) source builds → Sample_Creation
   Sample_Creation.do          ← builds Working Files/SampleFinalCDS(.dta), _WV(.dta)
-  Build_Master.do             ← builds Working Files/_master.dta
+  Build_Master.do             ← builds Working Files/_master.dta (run by the paper orchestrator)
   Merge_Variables.do          ← reference catalog of optional merges
 
-Paper Replication/            ← ANALYSIS (Option ii)
-  0_run_paper.do              ← orchestrator: runs all analysis do-files
+Paper Replication/            ← ANALYSIS
+  0_run_paper.do              ← orchestrator: Build_Master → all analysis do-files
   Code/                       ← 1_Descriptives, 2_Baseline_Analysis, 2c_, 3_, UPGRADE, Robustness
-  Figures and Tables/         ← output (one subfolder per section)
+  Figures and Tables/         ← output (one subfolder per section + Tables and Figures in Paper/)
+
+Investment Management Sample Creation/   ← OPTIONAL: joinby eMAXX personnel onto the sample
 
 Data/                         ← all data; each source folder holds its OWN build do-file + Raw Data/
   eMAXX/        (eMAXX_1998-2023.do + Raw eMAXX/ + *_Complete.dta)
-  MergentFISD/  (MergentFISD.do + Raw Data/ + rating panels + IssuesLookup)
+  MergentFISD/  (MergentFISD.do + Raw Data/ + rating panels + IssuesLookup;
+                 Paper Reference File/ = FINALIssueRatings.dta + its build .do)
   CapitalIQ/    (CapitalIQ_DO.do + Raw Data/ + CapitalIQ_Final)
   WRDS Bond Returns/ (WRDS_Bond_Returns.do + Raw Data/)
   Markit/       (CDS Data.do + Raw Data/ + CDS panel)
   Working Files/   (SampleFinalCDS, _WV, _master)
-  Reference Files/ (the four FROZEN read-only reference inputs — see above)
+  Reference Files/ (FROZEN read-only: CapitalIQ_Final, CDS, WRDS_Bond_Returns)
 ```
 
 > **Data on GitHub:** the `Data/` tree is ~100 GB and is *not* committed (it is
