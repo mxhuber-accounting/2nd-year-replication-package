@@ -8,8 +8,9 @@
 *** HOW TO RUN:  (1) edit the ${REPL} line in setup.do, (2) run setup.do,
 ***              (3) run this file.  No 'cd' needed -- absolute paths.
 ***
-*** Prerequisite: the working sample must already exist (run Sample Replication
-*** first, or use the shipped _WV file).
+*** Prerequisite: the working sample (chosen by ${mode}) must already exist in
+*** ${wsdir} -- i.e. the shipped _WV for mode=shipped, or a completed
+*** 0_run_sample.do rebuild for mode=reference/raw.
 ********************************************************************************
 
 if "${REPL}" == "" {
@@ -19,4 +20,4 @@ if "${REPL}" == "" {
 
 do "${REPL}/Investment Management Sample Creation/IM_Sample_Creation.do"
 
-di as result "Investment management sample complete. See Data/Working Files/eMAXXMergentFISD_IM_Sample.dta."
+di as result "Investment management sample complete. See ${wsdir}/eMAXXMergentFISD_IM_Sample.dta."

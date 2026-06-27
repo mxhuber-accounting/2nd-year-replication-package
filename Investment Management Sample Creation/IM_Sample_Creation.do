@@ -22,12 +22,17 @@
 *** Keys line up by type: fundid (long), firmid (long, destring'd in
 *** Sample_Creation), qdate (int) in both _WV and PERSONNEL_Complete.
 ***
-*** Input :  ${working}/eMAXXMergentFISD_SampleFinalCDS_WV.dta   (Sample_Creation)
-***          ${emaxx}/PERSONNEL_Complete.dta                     (eMAXX build)
-*** Output:  ${working}/PERSONNEL_FundFirmQtr.dta                (dedup'd personnel)
-***          ${working}/eMAXXMergentFISD_IM_Sample.dta           (the IM sample)
+*** MODE-AWARE: like the rest of the pipeline it reads/writes ${wsdir} (the
+*** working-sample folder picked by ${mode} in setup.do), so it attaches
+*** personnel to WHICHEVER sample you built -- shipped, Rebuilt_reference, or
+*** Rebuilt_raw -- and keeps its outputs in that same folder.
 ***
-*** Run setup.do first (defines ${working}, ${emaxx}). No 'cd' needed.
+*** Input :  ${wsdir}/eMAXXMergentFISD_SampleFinalCDS_WV.dta   (Sample_Creation)
+***          ${emaxx}/PERSONNEL_Complete.dta                   (eMAXX build, source)
+*** Output:  ${wsdir}/PERSONNEL_FundFirmQtr.dta                (dedup'd personnel)
+***          ${wsdir}/eMAXXMergentFISD_IM_Sample.dta           (the IM sample)
+***
+*** Run setup.do first (defines ${wsdir}, ${emaxx}). No 'cd' needed.
 ********************************************************************************
 
 if "${REPL}" == "" {
@@ -39,6 +44,17 @@ clear all
 set more off
 set varabbrev off
 version 17
+
+* The working sample chosen by ${mode} must already exist in ${wsdir}.
+di as text  "{hline 78}"
+di as result "  IM SAMPLE   --   working sample: mode = ${mode}   (${wsdir})"
+di as text  "{hline 78}"
+capture confirm file "${wsdir}/eMAXXMergentFISD_SampleFinalCDS_WV.dta"
+if _rc {
+    di as error "No _WV.dta found in ${wsdir}."
+    di as error "For mode = reference or raw, run Sample Replication/0_run_sample.do first."
+    exit 601
+}
 
 * ------------------------------- GRAIN ------------------------------------
 local grain "manager"          // "manager" (joinby) | "team" (collapse + m:1)
@@ -78,7 +94,7 @@ label var is_exec     "Non-investment executive"
 label var is_im       "Investment-management professional (PM/CIO/head/research/trader)"
 
 compress
-save "${working}/PERSONNEL_FundFirmQtr.dta", replace
+save "${wsdir}/PERSONNEL_FundFirmQtr.dta", replace
 
 if "`grain'" == "team" {
     * one row per fund-firm-quarter: team size + role counts / indicators
@@ -100,11 +116,11 @@ if "`grain'" == "team" {
 *** 2) Attach personnel to the working sample (keys: fundid firmid qdate)
 ********************************************************************************
 
-use "${working}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
+use "${wsdir}/eMAXXMergentFISD_SampleFinalCDS_WV.dta", clear
 
 if "`grain'" == "manager" {
     * m:m -> one row per holding x manager; keep holdings without a manager
-    joinby fundid firmid qdate using "${working}/PERSONNEL_FundFirmQtr.dta", ///
+    joinby fundid firmid qdate using "${wsdir}/PERSONNEL_FundFirmQtr.dta", ///
         unmatched(master) _merge(_mrg_pers)
     label define _mrgpL 1 "holding only" 3 "holding + manager", replace
     label values _mrg_pers _mrgpL
@@ -132,5 +148,5 @@ tab _mrg_pers
 ********************************************************************************
 
 compress
-save "${working}/eMAXXMergentFISD_IM_Sample.dta", replace
-di as result "Saved: ${working}/eMAXXMergentFISD_IM_Sample.dta"
+save "${wsdir}/eMAXXMergentFISD_IM_Sample.dta", replace
+di as result "Saved: ${wsdir}/eMAXXMergentFISD_IM_Sample.dta"

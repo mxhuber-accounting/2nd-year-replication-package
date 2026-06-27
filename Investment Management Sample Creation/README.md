@@ -7,9 +7,16 @@ reproduce the paper.
 
 ## What it does
 Takes the working sample built by `Sample Replication/Sample_Creation.do`
-(`Data/Working Files/eMAXXMergentFISD_SampleFinalCDS_WV.dta`) and attaches the
-eMAXX personnel file (`Data/eMAXX/PERSONNEL_Complete.dta`), keyed on
-**`fundid firmid qdate`**.
+(`…/eMAXXMergentFISD_SampleFinalCDS_WV.dta`) and attaches the eMAXX personnel
+file (`Data/eMAXX/PERSONNEL_Complete.dta`), keyed on **`fundid firmid qdate`**.
+
+**It follows `${mode}` like the rest of the pipeline.** It reads the `_WV` from —
+and writes its outputs to — `${wsdir}`, the working-sample folder picked in
+`setup.do`: `Data/Working Files/` for `shipped`, `…/Rebuilt_reference/` for
+`reference`, `…/Rebuilt_raw/` for `raw`. So it augments whichever sample you
+built, and a rebuild's IM outputs never land in the shipped folder. Run the
+matching `0_run_sample.do` rebuild first for `reference`/`raw` (for `shipped`
+the prebuilt `_WV` is already there).
 
 ## Why `joinby` (not `merge`)
 `PERSONNEL_Complete` is at the **employee × fund × firm × quarter** level — there
@@ -35,8 +42,12 @@ Built from the eMAXX 3-letter `job_code` (first-pass taxonomy — refine as need
 `is_trader`, `is_exec` (excluded), and `is_im` = any investment professional.
 
 ## How to run
-1. Edit the `${REPL}` line in `setup.do`, run `setup.do`.
-2. Run `0_run_im_sample.do`.
+1. Edit `${REPL}` and `${mode}` in `setup.do`, run `setup.do`.
+2. For `mode = reference`/`raw`, run `Sample Replication/0_run_sample.do` first
+   (for `shipped` the `_WV` already exists). The do-file errors out if no `_WV`
+   is found in `${wsdir}`.
+3. Run `0_run_im_sample.do`.
 
-**Output:** `Data/Working Files/eMAXXMergentFISD_IM_Sample.dta`
-(plus the dedup'd `Data/Working Files/PERSONNEL_FundFirmQtr.dta`).
+**Output:** `${wsdir}/eMAXXMergentFISD_IM_Sample.dta`
+(plus the dedup'd `${wsdir}/PERSONNEL_FundFirmQtr.dta`) — i.e. in the same
+`Data/Working Files/…` folder your `${mode}` selected.
