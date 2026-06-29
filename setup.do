@@ -42,7 +42,7 @@ global markit    "${data}/Markit"              // Markit CDS panel
 global working   "${data}/Working Files"       // sample outputs: SampleFinalCDS, _WV, _master
 global refdir    "${data}/Reference Files"     // the four FROZEN reference inputs (read-only)
 
-* ---- FROZEN reference inputs -- DO NOT OVERWRITE --
+* ---- Preprocessed vendor data -- DO NOT OVERWRITE --
 * These reproduce the exact paper results. Sample creation writes ONLY to
 * Data/<source>/ and Working Files/ -- it never touches these.
 *   MergentFISD reference = the rich FINALIssueRatings panel (ratings + bond
@@ -57,7 +57,7 @@ global ref_wrds    "${refdir}/WRDS_Bond_Returns.dta"
 * Enforce read-only on the four reference files 
 cap shell chmod 444 "${ref_mergent}" "${ref_capiq}" "${ref_cds}" "${ref_wrds}"
 di as text  "{hline 78}"
-di as result "  FROZEN reference inputs are READ-ONLY -> exact paper results."
+di as result "  Preprocessed vendor data is READ-ONLY -> exact paper results."
 di as text   "  Sample reproduction writes only to Data/<source>/ and never overwrites them."
 di as text  "{hline 78}"
 

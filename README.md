@@ -14,59 +14,64 @@ upstream to start**.
 
 ## How to reproduce
 
-**Goal:** regenerate every figure and table in the paper. Edit the **two settings
-at the top of `setup.do`** — `${REPL}` (where this package lives on your machine)
-and `${mode}` (how far upstream you want to start) — then **run `setup.do`**. No
-`cd` is needed; every path is absolute.
+**Goal: regenerate every figure and table in the paper.** The data moves through
+three stages, and you choose which stage to start from:
 
-There are **three ways to reproduce the paper**, from fastest to most thorough.
-They are fully independent — each writes to its own location and leaves the others
-(and the shipped files) untouched — so you can run any one of them, or all three,
-without them affecting each other.
+```
+raw vendor data  -->  preprocessed vendor files  -->  final dataset  -->  figures & tables
+      |                          |                          |
+   Option 3                   Option 2                   Option 1
+```
 
-### Step 1 — from the shipped sample · ≈ 20 minutes
-Set `mode = "shipped"` (the default). Uses the prebuilt working sample that already
-ships in `Data/Working Files/` and produces every figure and table in the paper.
-This is the recommended quick reproduction: there is no sample to build, so you
-only run the analysis.
+Edit the **two settings at the top of `setup.do`** — `${REPL}` (where this package
+lives on your machine) and `${mode}` (which stage you start from) — then **run
+`setup.do`**. The three options are fully independent: each writes to its own
+location and leaves the others untouched, so you can run any one of them — or all
+three — without them affecting each other.
 
-### Step 2 — from the reference vendor files · ≈ 1–2 hours
-Set `mode = "reference"`. Rebuilds the working sample from the frozen reference
-vendor files, then runs the analysis — confirming that the sample-construction
-code reproduces the shipped sample.
+### Option 1 — from the final, fully processed dataset · ≈ 20 minutes
+`mode = "shipped"` (the default). Start from the finished dataset that ships with
+the package and simply produce the figures and tables. Fastest path — there is
+nothing to build.
 
-### Step 3 — from the raw vendor data · several hours
-Set `mode = "raw"`. Rebuilds every vendor database from the raw source files, then
-the working sample, then the analysis — the complete end-to-end reproduction.
+### Option 2 — from the preprocessed vendor data · ≈ 1–2 hours
+`mode = "reference"`. Start from the cleaned, per-vendor files: merge them and run
+the sample selection yourself to rebuild the final dataset, then produce the
+figures and tables.
+
+### Option 3 — from the raw vendor data, from scratch · several hours
+`mode = "raw"`. Start from the original raw vendor downloads: rebuild each
+preprocessed vendor file, then do the merge and sample selection, then the figures
+and tables — the complete end-to-end reproduction.
 
 ### What to run
 1. **`setup.do`** — set `${REPL}` and `${mode}`, then run it.
-2. **`Sample Replication/0_run_sample.do`** — builds the working sample. Needed only
-   for Step 2 / Step 3; for Step 1 (shipped) there is nothing to build, so skip it.
+2. **`Sample Replication/0_run_sample.do`** — rebuilds the dataset. Needed for
+   Options 2 and 3 only; for Option 1 there is nothing to build, so skip it.
 3. **`Paper Replication/0_run_paper.do`** — writes every figure and table to
    `Paper Replication/Figures and Tables/`.
 
 ---
 
-## The FROZEN reference inputs — do not overwrite
-These reproduce the **exact** paper findings:
+## The preprocessed vendor data — do not overwrite
+These are the cleaned, per-vendor files that **Option 2** reads. They reproduce
+the **exact** paper findings:
 ```
 Data/Reference Files/CapitalIQ_Final.dta
 Data/Reference Files/CDS_2012_2020_GVKEY-CUSIP.dta
 Data/Reference Files/WRDS_Bond_Returns.dta
 Data/MergentFISD/Paper Reference File/FINALIssueRatings.dta   ← rich MergentFISD panel (+ its build .do)
 ```
-With `mode = reference` the pipeline reads these; `mode = raw` reads the freshly
-rebuilt source outputs in `Data/<source>/` instead (for MergentFISD,
-`MergentFISD_QuarterlyPanel_2012-2023.dta`). The default `mode = shipped` reads
-neither — it uses the prebuilt working sample directly. **Sample Replication
-only ever writes to `Data/<source>/` and `Data/Working Files/` — it never
-targets the files above.**
+**Option 2** (`reference`) reads these directly. **Option 3** (`raw`) regenerates
+its own copies from the raw vendor data in `Data/<source>/` instead (for
+MergentFISD, `MergentFISD_QuarterlyPanel_2012-2023.dta`). **Option 1** (`shipped`)
+reads neither — it uses the finished dataset directly. Sample construction only
+ever writes to `Data/<source>/` and `Data/Working Files/` — it never touches the
+files above.
 
-**Enforced:** the files are shipped **read-only**, and `setup.do` re-asserts
-the read-only lock on every run. So even a full sample reproduction — or a
-reproducer who has run it before — cannot overwrite them; the OS denies the write.
-(To deliberately refresh one, `chmod u+w` it first.)
+**Kept read-only:** these files ship read-only and `setup.do` re-asserts the lock
+on every run, so a rebuild — even a from-scratch one — cannot overwrite them; the
+OS denies the write. (To deliberately refresh one, `chmod u+w` it first.)
 
 ---
 
@@ -97,7 +102,7 @@ Data/                         ← all data; each source folder holds its OWN bui
   WRDS Bond Returns/ (WRDS_Bond_Returns.do + Raw Data/)
   Markit/       (CDS Data.do + Raw Data/ + CDS panel)
   Working Files/   (shipped SampleFinalCDS, _WV, _master; rebuilds -> Rebuilt_reference/ | Rebuilt_raw/)
-  Reference Files/ (FROZEN read-only: CapitalIQ_Final, CDS, WRDS_Bond_Returns)
+  Reference Files/ (preprocessed, read-only: CapitalIQ_Final, CDS, WRDS_Bond_Returns)
 ```
 
 > **Data on GitHub:** the `Data/` tree is ~100 GB and is *not* committed (it is
