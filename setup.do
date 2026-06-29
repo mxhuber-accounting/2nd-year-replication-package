@@ -7,7 +7,7 @@
 *** HOW TO USE:
 ***   Reproducers edit ONLY the ${REPL} line below to point at the unzipped
 ***   replication package. Every other path is derived from it. Each do-file in
-***   "1 Sample Replication" and "2 Paper Replication" starts by running this
+***   "Sample Replication" and "Paper Replication" starts by running this
 ***   file, so paths are defined in exactly one place.
 ********************************************************************************
 
@@ -18,7 +18,7 @@ global REPL "/Users/matthiashuber/Library/CloudStorage/Dropbox-HECPARIS/Matthias
 * (2) WHICH SAMPLE — which working sample the paper run (0_run_paper.do) uses:
 *       "shipped"   = the PREBUILT sample already in Data/Working Files/
 *                     (fast; reproduces the paper).  [DEFAULT]
-*       "reference" = REBUILD the sample from the FROZEN reference vendor files
+*       "reference" = REBUILD the sample from the preprocessed vendor files
 *                     -> writes to  Data/Working Files/Rebuilt_reference/
 *       "raw"       = REBUILD every vendor database from raw, then the sample
 *                     -> writes to  Data/Working Files/Rebuilt_raw/   (slow)
@@ -40,7 +40,7 @@ global capiq     "${data}/CapitalIQ"           // CapitalIQ outlook/watch panel
 global wrds      "${data}/WRDS Bond Returns"   // WRDS bond yields, amount outstanding, spreads
 global markit    "${data}/Markit"              // Markit CDS panel
 global working   "${data}/Working Files"       // sample outputs: SampleFinalCDS, _WV, _master
-global refdir    "${data}/Reference Files"     // the four FROZEN reference inputs (read-only)
+global refdir    "${data}/Reference Files"     // preprocessed vendor data (read-only)
 
 * ---- Preprocessed vendor data -- DO NOT OVERWRITE --
 * These reproduce the exact paper results. Sample creation writes ONLY to
