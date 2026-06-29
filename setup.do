@@ -1,8 +1,8 @@
 ********************************************************************************
 *** setup.do  --  Replication Package master path file
 ***
-*** Institutional Bondholdings: Anticipation of Credit Rating Downgrades by
-*** Long-Horizon Investors  (Matthias Xaver Huber, HEC Paris)
+*** Constrained Investors in the Corporate Bond Markets - Anticipation of
+*** Credit Rating Downgrades  (Matthias Xaver Huber, HEC Paris)
 ***
 *** HOW TO USE:
 ***   Reproducers edit ONLY the ${REPL} line below to point at the unzipped

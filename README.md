@@ -1,6 +1,6 @@
 # Replication Package
 
-**Institutional Bondholdings: Anticipation of Credit Rating Downgrades by Long-Horizon Investors**
+**Constrained Investors in the Corporate Bond Markets - Anticipation of Credit Rating Downgrades**
 Matthias Xaver Huber — HEC Paris
 
 This package reproduces all figures and tables in the paper. It builds a
